@@ -16,8 +16,6 @@ You have access to the following tools:
 for tool in get_tools():
     system_prompt += f"- {tool.__name__}\n"
 
-
-
 async def main():
     agent = FunctionAgent(
     llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-flash"),
