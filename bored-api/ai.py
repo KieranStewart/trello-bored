@@ -18,13 +18,12 @@ for tool in get_tools():
 
 async def main():
     agent = FunctionAgent(
-    llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-flash"),
-    tools=get_tools(),
+        llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-flash"),
+        tools=get_tools(),
+        system_prompt=system_prompt,
     )
     user_input = "What are the current open issues on GitHub?"
-    response = await agent.run(system_prompt + "\n" + user_input)
-    print(response)
-    # print thinking
+    response = await agent.run(user_input)
     print(response)
 
 async def query_agent(tools: list[function], system_prompt: str, user_input: str):
