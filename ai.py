@@ -16,17 +16,27 @@ You have access to the following tools:
 for tool in get_tools():
     system_prompt += f"- {tool.__name__}\n"
 
-agent = FunctionAgent(
-    llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-flash"),
-    tools=get_tools(),
-)
+
 
 async def main():
+    agent = FunctionAgent(
+    llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-flash"),
+    tools=get_tools(),
+    )
     user_input = "What are the current open issues on GitHub?"
     response = await agent.run(system_prompt + "\n" + user_input)
     print(response)
     # print thinking
     print(response)
+
+async def query_agent(tools: list[function], system_prompt: str, user_input: str):
+    agent = FunctionAgent(
+        llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-flash"),
+        tools=tools,
+        system_prompt=system_prompt,
+    )
+    response = await agent.run(user_input)
+    return response
 
 if __name__ == "__main__":
     asyncio.run(main())
