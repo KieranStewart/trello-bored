@@ -55,4 +55,5 @@ Create /bored-api/.env and add the following, replacing the password fields with
 
 ```text
 admin-key: <key>
+path: <pathtorepo>
 ```
