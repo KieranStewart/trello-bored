@@ -2,21 +2,16 @@ from proxy_mgmt.interface import BoardProxyInterface
 
 class GithubProjects(BoardProxyInterface):
     def get_ticket(self, ticket_id):
-        return {
-            "id": ticket_id,
-            "title": "Example Ticket",
-            "status": "In Progress",
-            "assignee": "First Last"
-        }
+        return
     
     def get_tickets(self, category):
-        return []
+        return
 
     def get_all_tickets(self):
-        return []
+        return
 
     def get_categories(self):
-        return []
+        return
 
     def move_ticket(self, ticket_id, category):
         return
