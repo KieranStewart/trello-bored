@@ -37,6 +37,8 @@ Messaged on branch creation
 
 ## Setup
 
+### Python Virtual Environment
+
 Linux
 
 ```bash
@@ -45,4 +47,12 @@ python -m venv .venv
 
 ```bash
 source .venv/bin/activate && pip install -r requirements.txt
+```
+
+### Setting Passwords on Server
+
+Create /bored-api/.env and add the following, replacing the password fields with secure passwords and keys
+
+```text
+admin-key: <key>
 ```
