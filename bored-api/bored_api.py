@@ -1,4 +1,5 @@
 from flask import Flask, Response, request
+from update import secure_update
 
 app = Flask(__name__)
 
@@ -9,6 +10,7 @@ def index():
         return Response('Hello World!', 200)
     elif request.method == 'POST':
         print("Posted:", request.form)
+        return Response('Pushed?!', 200)
 
 @app.route('/review')
 def review(): # TODO Write this endpoint (review)
@@ -25,6 +27,10 @@ def pr(): # TODO Write this endpoint (pr)
 @app.route('/branch')
 def branch(): # TODO Write this endpoint (branch)
     return Response('Default Response', 200)
+
+@app.route('/admin/serverupdate')
+def update():
+    return secure_update(request.headers.get("admin-key"))
 
 if __name__ == "__main__":
     app.run(port=8080)
