@@ -1,11 +1,14 @@
-from flask import Flask, Response
+from flask import Flask, Response, request
 
 app = Flask(__name__)
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return Response('Hello World!', 200)
+    if request.method == 'GET':
+        return Response('Hello World!', 200)
+    elif request.method == 'POST':
+        print("Posted:", request.form)
 
 @app.route('/review')
 def review(): # TODO Write this endpoint (review)
