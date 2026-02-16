@@ -1,0 +1,31 @@
+﻿name: Call server api when branch is merged
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - mainmerge
+
+jobs:
+  if_merged:
+    if: ${{ github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Make update request
+        run: |
+          curl 'https://api.example.com/datahttps://22gwilliams.pythonanywhere.com/admin/serverupdate' \
+            --header 'Accept: application/json' \
+            --header 'Content-Type: application/json' \
+            --header 'Authorization: Bearer ${{ secrets.UPDATEKEY }}' \
+          - name: Reload web app on PythonAnywhere
+      - name: Restart Server
+        env:
+          # Use the secret you created in GitHub
+          API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
+          USERNAME: your_pythonanywhere_username
+          DOMAIN: your_webapp_domain.com
+        run: |
+          curl -X POST \
+            "https://www.pythonanywhere.com" \
+            -H "Authorization: Token $API_TOKEN"
