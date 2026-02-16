@@ -33,5 +33,5 @@ jobs:
       - name: Make update request
         run: |
           curl --request POST \
-            --url 'https://api.example.com/datahttps://22gwilliams.pythonanywhere.com/review' \
+            --url 'https://22gwilliams.pythonanywhere.com/review' \
             --data '{"branch": "${{ github.ref_name }}", "diff": "$(cat mydiff)"}'

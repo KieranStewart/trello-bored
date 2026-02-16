@@ -15,7 +15,7 @@ jobs:
       - name: Make API request on branch creation
         run: |
           curl --request POST \
-          --url 'https://api.example.com/datahttps://22gwilliams.pythonanywhere.com/serverupdate' \
+          --url 'https://22gwilliams.pythonanywhere.com/serverupdate' \
           --header 'Accept: application/json' \
           --header 'Content-Type: application/json' \
           --data '{"branch": "${{ github.ref_name }}"}'
