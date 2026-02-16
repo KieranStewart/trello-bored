@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           git fetch origin main
-          git diff origin/main..HEAD > mydiff
+          git diff --name-only HEAD^1 HEAD > mydiff
           echo "mydiff = "
           cat mydiffi
       # for now just echo branch name on creation
