@@ -33,10 +33,14 @@ async def query_agent(tools: list[function], system_prompt: str, user_input: str
         tools=tools,
         system_prompt=system_prompt,
     )
-    response = await agent.run(user_input)
+    try:
+        response = await agent.run(user_input)
+    except Exception as e:
+        print(f"Error querying agent: {e}")
+        response = None
     return response
 
-async def review_pr_and_return_set_of_tickets(pr_url: str):
+async def review_pr_and_return_set_of_tickets(pr_url: str) -> str | None:
     system_prompt = f"""
     You are a helpful assistant that reviews a GitHub PR and returns a list of possible issue IDs that might be related.
     Please provide your response in the following format:

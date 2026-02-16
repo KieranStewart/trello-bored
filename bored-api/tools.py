@@ -1,3 +1,5 @@
+from types import FunctionType
+
 # This file contains the toolchain used by the Gemini
 # LlamaIndex agent.
 
@@ -29,6 +31,10 @@ def get_pr_details(pr_url):
     }
 
 def get_tools() -> list:
-    return [
-        get_github_issues, get_issue_status, get_pr_details
+    funcs = [
+        obj for name, obj in globals().items()
+        if isinstance(obj, FunctionType)
+        and obj.__module__ == __name__
+        and name != "get_tools"
     ]
+    return funcs
