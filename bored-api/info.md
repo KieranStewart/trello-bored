@@ -35,6 +35,10 @@ Messaged when a pull request is made
 
 Messaged on branch creation
 
+### /admin/serverupdate
+
+Messaged to update the server remotely. When messaged, needs the **"admin-key"** to be passed in the header.
+
 ## Setup
 
 ### Python Virtual Environment
