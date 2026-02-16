@@ -35,7 +35,13 @@ Messaged when a pull request is made
 
 Messaged on branch creation
 
+### /admin/serverupdate
+
+Messaged to update the server remotely. When messaged, needs the **"admin-key"** to be passed in the header.
+
 ## Setup
+
+### Python Virtual Environment
 
 Linux
 
@@ -45,4 +51,12 @@ python -m venv .venv
 
 ```bash
 source .venv/bin/activate && pip install -r requirements.txt
+```
+
+### Setting Passwords on Server
+
+Create /bored-api/.env and add the following, replacing the password fields with secure passwords and keys
+
+```text
+admin-key: <key>
 ```
