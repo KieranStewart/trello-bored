@@ -18,9 +18,10 @@ def secure_update(admin_key):
 
 def update():
     try:
+        path_to_repo = os.getenv('path')
         result = subprocess.run(
                 ['git', 'pull'],
-                cwd='./',
+                cwd=path_to_repo,
                 capture_output=True,
                 text=True,
                 check=True
@@ -30,4 +31,4 @@ def update():
         return Response("Repository Updated", 200)
     except subprocess.CalledProcessError as scpe:
         print("ERROR: During Pull:", scpe)
-        return Response('Git Pull Error', 500)
+        return Response('Git Pull Error: ' + str(scpe), 500)
