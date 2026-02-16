@@ -19,21 +19,30 @@ The bored API will be called when the following actions are taken with the follo
 
 ## Endpoints
 
-### /review
+### GitHub Actions Endpoints
+
+These endpoints will be reached out to by github actions, initiating the process.
+
+#### /review
 
 Messaged when review is started
 
-### /merge
+#### /merge
 
 Messaged when two branches are merged
 
-### /pr
+#### /pr
 
 Messaged when a pull request is made
 
-### /branch
+#### /branch
 
 Messaged on branch creation
+
+### /confirm
+
+This endpoints will be reached out to by the Code plugin to confirm changes.
+
 
 ### /admin/serverupdate
 

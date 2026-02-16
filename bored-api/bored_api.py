@@ -9,23 +9,27 @@ def index():
     if request.method == 'GET':
         return Response('Hello World!', 200)
     elif request.method == 'POST':
-        print("Posted:", request.form)
+        print("Posted:", request.form.keys())
         return Response('Pushed?!', 200)
 
-@app.route('/review')
+@app.route('/review', methods=['POST'])
 def review(): # TODO Write this endpoint (review)
     return Response('Default Response', 200)
 
-@app.route('/merge')
+@app.route('/merge', methods=['POST'])
 def merge(): # TODO Write this endpoint (merge)
     return Response('Default Response', 200)
 
-@app.route('/pr')
+@app.route('/pr', methods=['POST'])
 def pr(): # TODO Write this endpoint (pr)
     return Response('Default Response', 200)
 
-@app.route('/branch')
+@app.route('/branch', methods=['POST'])
 def branch(): # TODO Write this endpoint (branch)
+    return Response('Default Response', 200)
+
+@app.route('/confirm', methods=['POST'])
+def confirm(): # TODO Write this endpoint (confirm)
     return Response('Default Response', 200)
 
 @app.route('/admin/serverupdate')
