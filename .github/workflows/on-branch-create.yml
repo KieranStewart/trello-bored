@@ -1,0 +1,20 @@
+name: Call Server API on branch creation
+
+on: create
+
+jobs:
+  run-on-create:
+    runs-on: ubuntu-latest
+    steps:
+      # needed to see code and branch name
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      # for now just echo branch name on creation
+      - name: Report branch name
+        run: echo "A branch or tag was created with the name ${{ github.ref_name }}."
+      # - name: Make an API GET request
+      #   run: |
+      #     curl --request GET \
+      #     --url 'https://api.example.com/data' \
+      #     --header 'Authorization: Bearer ${{ secrets.API_TOKEN }}' \
+      #     --header 'Accept: application/json'

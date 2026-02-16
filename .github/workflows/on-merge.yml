@@ -1,0 +1,32 @@
+﻿name: Call server api when branch is merged
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - mainmerge
+
+jobs:
+  if_merged:
+    if: ${{ github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    steps:
+      # get the head of the current branch
+      - name: Checkout pull request HEAD
+        id: checkout_pr_head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      # print out the code difference between main and the current branch
+      - name: print-diff
+        shell: bash
+        run: |
+          git fetch origin main
+          git diff origin/main..HEAD > mydiff
+          echo "mydiff = "
+          cat mydiffi
+      # for now just echo branch name on creation
+      - name: Report branch name
+        run: echo "A branch or tag was created with the name ${{ github.ref_name }}."
