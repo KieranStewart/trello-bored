@@ -1,6 +1,7 @@
 import asyncio
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.agent.workflow import FunctionAgent
+from bored_api import pr
 from dotenv import load_dotenv
 import os
 from tools import get_tools
@@ -35,5 +36,21 @@ async def query_agent(tools: list[function], system_prompt: str, user_input: str
     response = await agent.run(user_input)
     return response
 
+async def review_pr_and_return_set_of_tickets(pr_url: str):
+    system_prompt = f"""
+    You are a helpful assistant that reviews a GitHub PR and returns a list of possible issue IDs that might be related.
+    Please provide your response in the following format:
+    <issue_id_1>, <issue_id_2>, ...
+    Say "None" if there are no linked open issues.
+    You have access to the following tools:
+    """
+    for tool in get_tools():
+        system_prompt += f"- {tool.__name__}\n"
+    
+    user_input = f"Review the PR at {pr_url} and return a list of issues"
+    response = await query_agent(get_tools(), system_prompt, user_input)
+    return response
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    response = asyncio.run(review_pr_and_return_set_of_tickets("https://github.com/your-repo/your-pr"))
+    print(response)
