@@ -9,13 +9,11 @@ jobs:
       # needed to see code and branch name
       - name: Check out repository code
         uses: actions/checkout@v4
-      # for now just echo branch name on creation
-      - name: Report branch name
-        run: echo "A branch or tag was created with the name ${{ github.ref_name }}."
-      - name: Make API request on branch creation
-        run: |
-          curl --request POST \
-          --url 'https://22gwilliams.pythonanywhere.com/serverupdate' \
-          --header 'Accept: application/json' \
-          --header 'Content-Type: application/json' \
-          --data '{"branch": "${{ github.ref_name }}"}'
+      # uncomment when endpoint is ready
+      # - name: Make API request on branch creation
+      #   run: |
+      #     curl --request POST \
+      #     --url 'https://22gwilliams.pythonanywhere.com/serverupdate' \
+      #     --header 'Accept: application/json' \
+      #     --header 'Content-Type: application/json' \
+      #     --data '{"branch": "${{ github.ref_name }}"}'

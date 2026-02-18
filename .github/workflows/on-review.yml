@@ -1,11 +1,9 @@
 ﻿name: Call server api on when a review is generated
 
 on:
-  pull_request:
+  pull_request_review:
     types:
-      - closed
-    branches:
-      - main
+      - submitted
 
 jobs:
   if_merged:
@@ -27,11 +25,9 @@ jobs:
           git diff origin/main..HEAD > mydiff
           echo "mydiff = "
           cat mydiffi
-      # for now just echo branch name on creation
-      - name: Report branch name
-        run: echo "A branch or tag was created with the name ${{ github.ref_name }}."
-      - name: Make update request
-        run: |
-          curl --request POST \
-            --url 'https://22gwilliams.pythonanywhere.com/review' \
-            --data '{"branch": "${{ github.ref_name }}", "diff": "$(cat mydiff)"}'
+      # Uncomment api calls when endpoint is ready
+      # - name: Make update request
+      #   run: |
+      #     curl --request POST \
+      #       --url 'https://22gwilliams.pythonanywhere.com/review' \
+      #       --data '{"branch": "${{ github.ref_name }}", "diff": "$(cat mydiff)"}'
