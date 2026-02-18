@@ -15,6 +15,6 @@ jobs:
       - name: Make update request
         run: |
           curl 'https://22gwilliams.pythonanywhere.com/admin/serverupdate' \
-        --header 'Accept: application/json' \
-        --header 'Content-Type: application/json' \
-        --header 'admin-key: ${{ secrets.UPDATEKEY }}'
+          --header 'Accept: application/json' \
+          --header 'Content-Type: application/json' \
+          --header 'admin-key: ${{ secrets.UPDATEKEY }}'
