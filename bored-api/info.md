@@ -43,6 +43,10 @@ Messaged on branch creation
 
 This endpoints will be reached out to by the Code plugin to confirm changes.
 
+### /checkout
+
+This endpoint will be reached out to by the code plugin to indicate that they have checked out a branch, giving them the new todo list.
+
 
 ### /admin/serverupdate
 

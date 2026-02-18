@@ -32,6 +32,10 @@ def branch(): # TODO Write this endpoint (branch)
 def confirm(): # TODO Write this endpoint (confirm)
     return Response('Default Response', 200)
 
+@app.route('/checkout')
+def branch(): # TODO Write this endpoint (checkout)
+    return Response('Default Response', 200)
+
 @app.route('/admin/serverupdate')
 def update():
     return secure_update(request.headers.get("admin-key"))
