@@ -20,13 +20,13 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       # print out the code difference between main and the current branch
-      - name: print-diff
-        shell: bash
-        run: |
-          git fetch origin main
-          git diff --name-only HEAD^1 HEAD > mydiff
-          echo "mydiff = "
-          cat mydiffi
+      # - name: print-diff
+      #   shell: bash
+      #   run: |
+      #     git fetch origin main
+      #     git diff --name-only HEAD^1 HEAD > mydiff
+      #     echo "mydiff = "
+      #     cat mydiffi
       # Uncomment api calls when endpoint is ready
       # - name: Make update request
       #   run: |

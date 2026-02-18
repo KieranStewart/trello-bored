@@ -12,20 +12,9 @@ jobs:
     if: ${{ github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
-      - name: echo auth key
-        run: echo "Auth key is ${{ secrets.UPDATEKEY }}"
-      - name: Verify auth key presence
-        run: |
-          if [ -z "${{ secrets.UPDATEKEY }}" ]; then
-            echo "Error: Secret is empty!"
-          else
-            echo "Secret is set. Length: ${#SECRET}"
-          fi
-        env:
-          SECRET: ${{ secrets.UPDATEKEY }}
       - name: Make update request
         run: |
           curl 'https://22gwilliams.pythonanywhere.com/admin/serverupdate' \
-            --header 'Accept: application/json' \
-            --header 'Content-Type: application/json' \
-            --header 'Authorization: Bearer ${{ secrets.UPDATEKEY }}'
+        --header 'Accept: application/json' \
+        --header 'Content-Type: application/json' \
+        --header 'admin-key: ${{ secrets.UPDATEKEY }}'
