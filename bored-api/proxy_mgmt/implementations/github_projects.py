@@ -14,6 +14,7 @@ class Ticket:
     item_id: str
     title: str
     issue_id: str
+    status: str
     state: str
     body: str
     labels: list[Label]
@@ -35,6 +36,13 @@ class GithubProjects(BoardProxyInterface):
         )
         response.raise_for_status()
         return response.json()
+    
+    def get_status(self, item):
+        for field in item["fieldValues"]["nodes"]:
+            if "name" in field:
+                if field["name"] in self.get_categories():
+                    return field["name"]
+        return None
 
     def get_ticket(self, ticket_id: str) -> Ticket:
         query = """
@@ -42,13 +50,20 @@ class GithubProjects(BoardProxyInterface):
             node(id: $itemId) {
                 ... on ProjectV2Item {
                     id
+                    fieldValues(first: 5) {
+                        nodes {
+                            ... on ProjectV2ItemFieldSingleSelectValue {
+                                name
+                            }
+                        }
+                    }
                     content {
                         ... on Issue {
                             id
                             title
                             body
                             state
-                            labels(first: 100) {
+                            labels(first: 5) {
                                 nodes {
                                     id
                                     name
@@ -80,101 +95,41 @@ class GithubProjects(BoardProxyInterface):
             item_id=item["id"],
             title=item["content"]["title"],
             issue_id=item["content"]["id"],
+            status=self.get_status(item),
             body=item["content"]["body"],
             state=item["content"]["state"],
             labels=labels
         )
     
     def get_tickets(self, category) -> list[Ticket]:
-        query = """
-        query($projectId: ID!) {
-            node(id: $projectId) {
-                ... on ProjectV2 {
-                    items(first: 100) {
-                        nodes {
-                            id
-                            content {
-                                ... on Issue {
-                                    id
-                                    title
-                                    body
-                                    state
-                                    labels(first: 100) {
-                                        nodes {
-                                            id
-                                            name
-                                            color
-                                            description
-                                        }
-                                    }
-                                }
-                            }
-                                fieldValues(first: 20) {
-                                    nodes {
-                                        ... on ProjectV2ItemFieldSingleSelectValue {
-                                            name
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        """
-
-        json = self.run_query(query, {"projectId": self.project_id})
-        items = json["data"]["node"]["items"]["nodes"]
-        tickets: list[Ticket] = []
-
-        for item in items:
-            status = None
-            for field in item["fieldValues"]["nodes"]:
-                if "name" not in field:
-                    continue
-                if field["name"] == category:
-                    status = field["name"]
-                    break
-
-            if status != category:
-                continue
-
-            labels: list[Label] = [
-                Label(
-                    id=label["id"],
-                    name=label["name"],
-                    color=label.get("color"),
-                    description=label.get("description"),
-                )
-                for label in item["content"]["labels"]["nodes"]
-            ]
-
-            tickets.append(Ticket(
-                item_id=item["id"],
-                title=item["content"]["title"],
-                issue_id=item["content"]["id"],
-                body=item["content"]["body"],
-                state=item["content"]["state"],
-                labels=labels
-            ))
-
-        return tickets
+        return [
+            ticket
+            for ticket in self.get_all_tickets()
+            if ticket.status == category
+        ]
 
     def get_all_tickets(self) -> list[Ticket]:
         query = """
         query($projectId: ID!) {
             node(id: $projectId) {
                 ... on ProjectV2 {
-                    items(first: 100) {
+                    items(first: 50) {
                         nodes {
                             id
+                            fieldValues(first: 5) {
+                                nodes {
+                                    ... on ProjectV2ItemFieldSingleSelectValue {
+                                        name
+                                    }
+                                }
+                            }
                             content {
                                 ... on Issue {
                                     id
                                     title
                                     body
                                     state
-                                    labels(first: 100) {
+                                    labels(first: 5) {
                                         nodes {
                                             id
                                             name
@@ -210,6 +165,7 @@ class GithubProjects(BoardProxyInterface):
                 item_id=item["id"],
                 title=item["content"]["title"],
                 issue_id=item["content"]["id"],
+                status=self.get_status(item),
                 body=item["content"]["body"],
                 state=item["content"]["state"],
                 labels=labels
