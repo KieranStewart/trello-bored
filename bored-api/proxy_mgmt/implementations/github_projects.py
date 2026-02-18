@@ -19,6 +19,17 @@ class Ticket:
     body: str
     labels: list[Label]
 
+@dataclass
+class StatusInfo:
+    field_id: str
+    options: dict[str, str]
+
+    def get_option_id(self, name: str) -> str | None:
+        return self.options.get(name)
+
+    def names(self) -> list[str]:
+        return list(self.options.keys())
+
 
 class GithubProjects(BoardProxyInterface):
     def __init__(self, token, project_id):
@@ -38,10 +49,11 @@ class GithubProjects(BoardProxyInterface):
         return response.json()
     
     def get_status(self, item):
+        status_info = self.get_categories()
+
         for field in item["fieldValues"]["nodes"]:
-            if "name" in field:
-                if field["name"] in self.get_categories():
-                    return field["name"]
+            if "name" in field and field["name"] in status_info.names():
+                return field["name"]
         return None
 
     def get_ticket(self, ticket_id: str) -> Ticket:
@@ -175,7 +187,7 @@ class GithubProjects(BoardProxyInterface):
 
         return tickets
 
-    def get_categories(self) -> list[str]:
+    def get_categories(self) -> StatusInfo:
         query = """
         query($projectId: ID!) {
             node(id: $projectId) {
@@ -183,7 +195,6 @@ class GithubProjects(BoardProxyInterface):
                     field(name: "Status") {
                         ... on ProjectV2SingleSelectField {
                             id
-                            name
                             options {
                                 id
                                 name
@@ -197,8 +208,45 @@ class GithubProjects(BoardProxyInterface):
 
         json = self.run_query(query, {"projectId": self.project_id})
         field = json["data"]["node"]["field"]
-        return [option["name"] for option in field["options"]]
+
+        return StatusInfo(
+            field_id=field["id"],
+            options={opt["name"]: opt["id"] for opt in field["options"]}
+        )
 
     def move_ticket(self, ticket_id, category):
-        return
-    
+        if self.get_ticket(ticket_id).status == category:
+            return
+
+        status_info = self.get_categories()
+        option_id = status_info.get_option_id(category)
+
+        mutation = """
+        mutation(
+            $projectId: ID!,
+            $itemId: ID!,
+            $fieldId: ID!,
+            $optionId: String!
+        ) {
+            updateProjectV2ItemFieldValue(
+                input: {
+                    projectId: $projectId,
+                    itemId: $itemId,
+                    fieldId: $fieldId,
+                    value: { singleSelectOptionId: $optionId }
+                }
+            ) {
+                projectV2Item { id }
+            }
+        }
+        """
+
+        variables = {
+            "projectId": self.project_id,
+            "itemId": ticket_id,
+            "fieldId": status_info.field_id,
+            "optionId": option_id
+        }
+
+        self.run_query(mutation, variables)
+        

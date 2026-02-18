@@ -42,8 +42,7 @@ proxy = GithubProjects(
     project_id=os.getenv("GITHUB_PROJECT_ID")
 )
 
-data = proxy.get_all_tickets()
-print(data)
+data = proxy.move_ticket('PVTI_lAHOBy7VJ84BOhPezglR7fw', 'In review')
 
 if __name__ == "__main__":
     app.run(port=8080)
