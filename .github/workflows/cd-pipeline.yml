@@ -1,4 +1,4 @@
-﻿name: Call server api when branch is merged
+﻿name: Call update when branch is merged
 
 on:
   pull_request:
