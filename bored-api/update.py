@@ -28,6 +28,12 @@ def update():
             )
         if result.stdout == 'Already up to date.\n':
             return Response("Already up to date", 200)
+
+        subprocess.run(
+            ['touch', 'var/www/22gwilliams_pythonanywhere_com_wsgi.py'],
+            check=True
+        )
+
         return Response("Repository Updated", 200)
     except subprocess.CalledProcessError as scpe:
         print("ERROR: During Pull:", scpe)
