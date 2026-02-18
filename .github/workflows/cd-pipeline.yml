@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: echo auth key
-        run: echo "Auth key is ${{ secrets.UPDATEKEY }}"- name: Verify auth key presence
+        run: echo "Auth key is ${{ secrets.UPDATEKEY }}"
+      - name: Verify auth key presence
         run: |
           if [ -z "${{ secrets.UPDATEKEY }}" ]; then
             echo "Error: Secret is empty!"
