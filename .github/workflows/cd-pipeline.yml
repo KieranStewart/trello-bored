@@ -17,5 +17,4 @@ jobs:
           curl 'https://22gwilliams.pythonanywhere.com/admin/serverupdate' \
             --header 'Accept: application/json' \
             --header 'Content-Type: application/json' \
-            --header 'Authorization: Bearer ${{ secrets.UPDATEKEY }}' \
-          - name: Reload web app on PythonAnywhere
+            --header 'Authorization: Bearer ${{ secrets.UPDATEKEY }}'
