@@ -35,16 +35,5 @@ def branch(): # TODO Write this endpoint (branch)
 def update():
     return secure_update(request.headers.get("admin-key"))
 
-# Temp
-load_dotenv()
-
-proxy = GithubProjects(
-    token=os.getenv("GITHUB_TOKEN"),
-    project_id=os.getenv("GITHUB_PROJECT_ID")
-)
-
-data = proxy.get_all_tickets()
-print(data)
-
 if __name__ == "__main__":
     app.run(port=8080)
