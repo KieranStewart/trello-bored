@@ -3,10 +3,20 @@ from proxy_mgmt.interface import BoardProxyInterface
 from dataclasses import dataclass
 
 @dataclass
+class Label:
+    id: str
+    name: str
+    color: str
+    description: str
+
+@dataclass
 class Ticket:
     item_id: str
     title: str
     issue_id: str
+    state: str
+    body: str
+    labels: list[Label]
 
 
 class GithubProjects(BoardProxyInterface):
@@ -36,6 +46,16 @@ class GithubProjects(BoardProxyInterface):
                         ... on Issue {
                             id
                             title
+                            body
+                            state
+                            labels(first: 100) {
+                                nodes {
+                                    id
+                                    name
+                                    color
+                                    description
+                                }
+                            }
                         }
                     }
                 }
@@ -46,10 +66,23 @@ class GithubProjects(BoardProxyInterface):
         json = self.run_query(query, {"itemId": ticket_id})
         item = json["data"]["node"]
 
+        labels: list[Label] = [
+            Label(
+                id=label["id"],
+                name=label["name"],
+                color=label.get("color"),
+                description=label.get("description"),
+            )
+            for label in item["content"]["labels"]["nodes"]
+        ]
+
         return Ticket(
             item_id=item["id"],
             title=item["content"]["title"],
-            issue_id=item["content"]["id"]
+            issue_id=item["content"]["id"],
+            body=item["content"]["body"],
+            state=item["content"]["state"],
+            labels=labels
         )
     
     def get_tickets(self, category) -> list[Ticket]:
@@ -64,6 +97,16 @@ class GithubProjects(BoardProxyInterface):
                                 ... on Issue {
                                     id
                                     title
+                                    body
+                                    state
+                                    labels(first: 100) {
+                                        nodes {
+                                            id
+                                            name
+                                            color
+                                            description
+                                        }
+                                    }
                                 }
                             }
                                 fieldValues(first: 20) {
@@ -96,10 +139,23 @@ class GithubProjects(BoardProxyInterface):
             if status != category:
                 continue
 
+            labels: list[Label] = [
+                Label(
+                    id=label["id"],
+                    name=label["name"],
+                    color=label.get("color"),
+                    description=label.get("description"),
+                )
+                for label in item["content"]["labels"]["nodes"]
+            ]
+
             tickets.append(Ticket(
                 item_id=item["id"],
                 title=item["content"]["title"],
-                issue_id=item["content"]["id"]
+                issue_id=item["content"]["id"],
+                body=item["content"]["body"],
+                state=item["content"]["state"],
+                labels=labels
             ))
 
         return tickets
@@ -116,6 +172,16 @@ class GithubProjects(BoardProxyInterface):
                                 ... on Issue {
                                     id
                                     title
+                                    body
+                                    state
+                                    labels(first: 100) {
+                                        nodes {
+                                            id
+                                            name
+                                            color
+                                            description
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -130,10 +196,23 @@ class GithubProjects(BoardProxyInterface):
         tickets: list[Ticket] = []
 
         for item in items:
+            labels: list[Label] = [
+                Label(
+                    id=label["id"],
+                    name=label["name"],
+                    color=label.get("color"),
+                    description=label.get("description"),
+                )
+                for label in item["content"]["labels"]["nodes"]
+            ]
+            
             ticket = Ticket(
                 item_id=item["id"],
                 title=item["content"]["title"],
-                issue_id=item["content"]["id"]
+                issue_id=item["content"]["id"],
+                body=item["content"]["body"],
+                state=item["content"]["state"],
+                labels=labels
             )
 
             tickets.append(ticket)
