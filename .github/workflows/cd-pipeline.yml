@@ -12,6 +12,8 @@ jobs:
     if: ${{ github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
+      - name: echo auth key
+        run: echo "Auth key is ${{ secrets.UPDATEKEY }}"
       - name: Make update request
         run: |
           curl 'https://22gwilliams.pythonanywhere.com/admin/serverupdate' \
