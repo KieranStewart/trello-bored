@@ -13,7 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: echo auth key
-        run: echo "Auth key is ${{ secrets.UPDATEKEY }}"
+        run: echo "Auth key is ${{ secrets.UPDATEKEY }}"- name: Verify auth key presence
+        run: |
+          if [ -z "${{ secrets.UPDATEKEY }}" ]; then
+            echo "Error: Secret is empty!"
+          else
+            echo "Secret is set. Length: ${#SECRET}"
+          fi
+        env:
+          SECRET: ${{ secrets.UPDATEKEY }}
       - name: Make update request
         run: |
           curl 'https://22gwilliams.pythonanywhere.com/admin/serverupdate' \
