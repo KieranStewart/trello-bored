@@ -6,8 +6,7 @@ on:
       - submitted
 
 jobs:
-  if_merged:
-    if: ${{ github.event.pull_request.merged == true }}
+  on_review:
     runs-on: ubuntu-latest
     steps:
       # get the head of the current branch
