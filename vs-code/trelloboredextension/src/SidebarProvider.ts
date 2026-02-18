@@ -22,13 +22,36 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 case 'fetchChanges':
                     await this._fetchAndDisplayChanges();
                     break;
+                case 'saveSettings':
+                    await this._saveSettings(message.serverUrl, message.boardUrl);
+                    break;
+                case 'loadSettings':
+                    this._loadSettings();
+                    break;
             }
         });
     }
 
+    private async _saveSettings(serverUrl: string, boardUrl: string) {
+        const config = vscode.workspace.getConfiguration('trelloboredextension');
+        await config.update('serverUrl', serverUrl, vscode.ConfigurationTarget.Global);
+        await config.update('boardUrl', boardUrl, vscode.ConfigurationTarget.Global);
+        vscode.window.showInformationMessage('Settings saved!');
+    }
+
+    private _loadSettings() {
+        const config = vscode.workspace.getConfiguration('trelloboredextension');
+        const serverUrl = config.get<string>('serverUrl', 'http://localhost:3000');
+        const boardUrl = config.get<string>('boardUrl', '');
+        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, boardUrl });
+    }
+
     private async _fetchAndDisplayChanges() {
         try {
-            const apiUrl = vscode.workspace.getConfiguration('trelloboredextension').get<string>('apiUrl', 'http://localhost:3000/api/changes');
+            const config = vscode.workspace.getConfiguration('trelloboredextension');
+            const serverUrl = config.get<string>('serverUrl', 'http://localhost:3000');
+            const boardUrl = config.get<string>('boardUrl', '');
+            const apiUrl = `${serverUrl}/api/changes${boardUrl ? '?board=' + boardUrl : ''}`;
             const data = await this._httpGet(apiUrl);
             this._view?.webview.postMessage({ command: 'updateChanges', data: JSON.parse(data) });
         } catch (error) {
@@ -56,7 +79,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     <title>Trello Bored</title>
     <style>
         body { padding: 10px; font-family: var(--vscode-font-family); }
-        button { padding: 8px 16px; margin-bottom: 16px; cursor: pointer; }
+        .settings { margin-bottom: 16px; padding: 12px; background: var(--vscode-editor-background); border-radius: 4px; }
+        input { width: 100%; padding: 6px; margin: 4px 0 8px 0; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); }
+        label { display: block; margin-top: 8px; font-size: 12px; }
+        button { padding: 8px 16px; margin: 4px 4px 16px 0; cursor: pointer; }
         .change-item { padding: 8px; margin: 8px 0; border-left: 3px solid var(--vscode-button-background); background: var(--vscode-editor-background); }
         .error { color: var(--vscode-errorForeground); }
         .loading { color: var(--vscode-descriptionForeground); }
@@ -64,10 +90,25 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
     <h2>Trello Board Changes</h2>
+    <div class="settings">
+        <label>Server Base URL:</label>
+        <input type="text" id="serverUrl" placeholder="http://localhost:3000">
+        <label>Board URL:</label>
+        <input type="text" id="boardUrl" placeholder="https://trello.com/b/abc123">
+        <button onclick="saveSettings()">Save Settings</button>
+    </div>
     <button onclick="fetchChanges()">Refresh Changes</button>
     <div id="content"></div>
     <script>
         const vscode = acquireVsCodeApi();
+        
+        vscode.postMessage({ command: 'loadSettings' });
+        
+        function saveSettings() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const boardUrl = document.getElementById('boardUrl').value;
+            vscode.postMessage({ command: 'saveSettings', serverUrl, boardUrl });
+        }
         
         function fetchChanges() {
             document.getElementById('content').innerHTML = '<p class="loading">Loading...</p>';
@@ -79,6 +120,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const content = document.getElementById('content');
             
             switch (message.command) {
+                case 'settingsLoaded':
+                    document.getElementById('serverUrl').value = message.serverUrl;
+                    document.getElementById('boardUrl').value = message.boardUrl;
+                    break;
                 case 'updateChanges':
                     displayChanges(message.data);
                     break;
