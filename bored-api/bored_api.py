@@ -7,7 +7,7 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return Response('Hello World! 2 updated', 200)
+        return Response('Hello World!', 200)
     elif request.method == 'POST':
         print("Posted:", request.form)
         return Response('Pushed?!', 200)
