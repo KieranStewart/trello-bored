@@ -30,7 +30,7 @@ def update():
             return Response("Already up to date", 200)
 
         subprocess.run(
-            ['touch', '/var/www/_wsgi.py/var/www/22gwilliams_pythonanywhere_com_wsgi.py'],
+            ['touch', 'var/www/22gwilliams_pythonanywhere_com_wsgi.py'],
             check=True
         )
 
