@@ -1,8 +1,6 @@
 import os
 from flask import Flask, Response, request
-from dotenv import load_dotenv
 from update import secure_update
-from proxy_mgmt.implementations.github_projects import GithubProjects
 
 app = Flask(__name__)
 
