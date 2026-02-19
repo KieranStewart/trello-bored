@@ -1,3 +1,4 @@
+import os
 from flask import Flask, Response, request
 from update import secure_update
 
