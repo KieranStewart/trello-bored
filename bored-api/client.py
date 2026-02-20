@@ -7,6 +7,7 @@ Docstring for bored-api.client
 """
 # FIXME save sessions to disk and load on next server startup
 # FIXME remove sample sessions
+# TODO Add project vs user seperation
 sessions = {
     "0":[
         {
@@ -48,5 +49,6 @@ def generate_session(session_id:str):
         out.headers.add('session-id', str(session_id))
         return out
     else:
-        # In future should prevent users from knowing when there is a session id conflict to prevent stealing session ids (possibly use a two key system)
+        # In future should prevent users from knowing when there is a session id conflict to prevent locating and stealing session ids (possibly use a two key system)
+        # Also should probably clear empty sessions after some time
         return Response("Session id conflict", 400)
