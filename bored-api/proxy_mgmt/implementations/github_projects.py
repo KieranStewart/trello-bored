@@ -1,19 +1,3 @@
-<<<<<<< Updated upstream
-from proxy_mgmt.interface import BoardProxyInterface
-
-class GithubProjects(BoardProxyInterface):
-    def get_ticket(self, ticket_id):
-        return
-    
-    def get_tickets(self, category):
-        return
-
-    def get_all_tickets(self):
-        return
-
-    def get_categories(self):
-        return
-=======
 import requests
 from proxy_mgmt.interface import BoardProxyInterface
 from dataclasses import dataclass
@@ -258,7 +242,6 @@ class GithubProjects(BoardProxyInterface):
         json = self.run_query(query, {"projectId": self.project_id})
         field = json["data"]["node"]["field"]
         return [option["name"] for option in field["options"]]
->>>>>>> Stashed changes
 
     def move_ticket(self, ticket_id, category):
         return

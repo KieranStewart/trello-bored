@@ -1,7 +1,4 @@
-<<<<<<< Updated upstream
-=======
 import os
->>>>>>> Stashed changes
 from proxy_mgmt.implementations.github_projects import GithubProjects
 
 PROJECT_PROVIDER = "github" # change this value to update which board provider to use
@@ -9,9 +6,6 @@ PROJECT_PROVIDER = "github" # change this value to update which board provider t
 class BoardProxy:
     def __init__(self):
         if PROJECT_PROVIDER == "github":
-<<<<<<< Updated upstream
-            self.provider = GithubProjects()
-=======
             token = os.getenv("GITHUB_TOKEN")
             project_id = os.getenv("GITHUB_PROJECT_ID")
 
@@ -19,7 +13,6 @@ class BoardProxy:
                 raise ValueError("Missing GitHub token or project ID")
 
             self.provider = GithubProjects(token, project_id)
->>>>>>> Stashed changes
         else:
             raise ValueError("Unsupported board provider")
 
