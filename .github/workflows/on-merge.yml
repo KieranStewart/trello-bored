@@ -5,7 +5,7 @@ on:
     types:
       - closed
     branches:
-      - mainmerge
+      - main
 
 jobs:
   if_merged:
@@ -20,13 +20,16 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
       # print out the code difference between main and the current branch
-      - name: print-diff
-        shell: bash
-        run: |
-          git fetch origin main
-          git diff origin/main..HEAD > mydiff
-          echo "mydiff = "
-          cat mydiffi
-      # for now just echo branch name on creation
-      - name: Report branch name
-        run: echo "A branch or tag was created with the name ${{ github.ref_name }}."
+      # - name: print-diff
+      #   shell: bash
+      #   run: |
+      #     git fetch origin main
+      #     git diff --name-only HEAD^1 HEAD > mydiff
+      #     echo "mydiff = "
+      #     cat mydiffi
+      # Uncomment api calls when endpoint is ready
+      # - name: Make update request
+      #   run: |
+      #     curl --request POST \
+      #       --url 'https://22gwilliams.pythonanywhere.com/merge' \
+      #       --data '{"branch": "${{ github.ref_name }}", "diff": "$(cat mydiff)"}'
