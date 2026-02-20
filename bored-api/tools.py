@@ -1,4 +1,5 @@
 from types import FunctionType
+from proxy_mgmt.proxy import BoardProxy
 
 # This file contains the toolchain used by the Gemini
 # LlamaIndex agent.
@@ -37,4 +38,6 @@ def get_tools() -> list:
         and obj.__module__ == __name__
         and name != "get_tools"
     ]
+    proxy = BoardProxy()
+    funcs += proxy.get_all_tools()
     return funcs

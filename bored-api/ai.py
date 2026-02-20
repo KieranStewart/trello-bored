@@ -5,6 +5,7 @@ from bored_api import pr
 from dotenv import load_dotenv
 import os
 from tools import get_tools
+from proxy_mgmt.proxy import BoardProxy
 
 load_dotenv()
 
@@ -50,6 +51,8 @@ async def review_pr_and_return_set_of_tickets(pr_url: str) -> str | None:
     """
     for tool in get_tools():
         system_prompt += f"- {tool.__name__}\n"
+    system_prompt += f"You can also use the following board proxy methods to get information about tickets:\n"
+
     
     user_input = f"Review the PR at {pr_url} and return a list of issues"
     response = await query_agent(get_tools(), system_prompt, user_input)
