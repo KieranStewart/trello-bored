@@ -13,8 +13,7 @@ class Label:
 class Ticket:
     item_id: str
     title: str
-    issue_id: str
-    status: str
+    number: str
     state: str
     body: str
     labels: list[Label]
@@ -72,6 +71,7 @@ class GithubProjects(BoardProxyInterface):
                     content {
                         ... on Issue {
                             id
+                            number
                             title
                             body
                             state
@@ -106,8 +106,7 @@ class GithubProjects(BoardProxyInterface):
         return Ticket(
             item_id=item["id"],
             title=item["content"]["title"],
-            issue_id=item["content"]["id"],
-            status=self.get_status(item),
+            number=item["content"]["number"],
             body=item["content"]["body"],
             state=item["content"]["state"],
             labels=labels
@@ -138,6 +137,7 @@ class GithubProjects(BoardProxyInterface):
                             content {
                                 ... on Issue {
                                     id
+                                    number
                                     title
                                     body
                                     state
@@ -176,8 +176,7 @@ class GithubProjects(BoardProxyInterface):
             ticket = Ticket(
                 item_id=item["id"],
                 title=item["content"]["title"],
-                issue_id=item["content"]["id"],
-                status=self.get_status(item),
+                number=item["content"]["number"],
                 body=item["content"]["body"],
                 state=item["content"]["state"],
                 labels=labels
