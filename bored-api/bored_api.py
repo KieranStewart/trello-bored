@@ -1,6 +1,7 @@
 import os
 from flask import Flask, Response, request
 from update import secure_update
+from client import client_view, query_client, generate_session
 
 app = Flask(__name__)
 
@@ -10,24 +11,44 @@ def index():
     if request.method == 'GET':
         return Response('Hello World! 2', 200)
     elif request.method == 'POST':
-        print("Posted:", request.form)
+        print("Posted:", request.form.keys())
         return Response('Pushed?!', 200)
 
-@app.route('/review')
+@app.route('/review', methods=['POST'])
 def review(): # TODO Write this endpoint (review)
     return Response('Default Response', 200)
 
-@app.route('/merge')
+@app.route('/merge', methods=['POST'])
 def merge(): # TODO Write this endpoint (merge)
+    # Query AI for changes
+    # Write changes to client
     return Response('Default Response', 200)
 
-@app.route('/pr')
+@app.route('/pr', methods=['POST'])
 def pr(): # TODO Write this endpoint (pr)
     return Response('Default Response', 200)
 
-@app.route('/branch')
+@app.route('/branch', methods=['POST'])
 def branch(): # TODO Write this endpoint (branch)
     return Response('Default Response', 200)
+
+@app.route('/checkout')
+def checkout(): # TODO Write this endpoint (checkout)
+    return Response('Default Response', 200)
+
+@app.route('/confirm', methods=['POST', 'GET'])
+def confirm():
+    if request.method == 'GET':
+        print("getting")
+        return client_view(request.headers.get("session-id"))
+    else:
+        # TODO write sent changes to board
+        return Response("Not created", 400)
+
+@app.route('/init', methods=['POST'])
+def init():
+    session_id = request.headers.get('session-id', '')
+    return generate_session(session_id)
 
 @app.route('/admin/serverupdate')
 def update():
