@@ -7,11 +7,10 @@ from proxy_mgmt.implementations.github_projects import GithubProjects
 
 app = Flask(__name__)
 
-
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return Response('Hello World! 2', 200)
+        return Response('Hello World!', 200)
     elif request.method == 'POST':
         print("Posted:", request.form.keys())
         return Response('Pushed?!', 200)

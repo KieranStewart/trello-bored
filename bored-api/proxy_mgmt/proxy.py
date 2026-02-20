@@ -6,6 +6,7 @@ PROJECT_PROVIDER = "github" # change this value to update which board provider t
 class BoardProxy:
     def __init__(self):
         if PROJECT_PROVIDER == "github":
+            self.provider = GithubProjects()
             token = os.getenv("GITHUB_TOKEN")
             project_id = os.getenv("GITHUB_PROJECT_ID")
 
