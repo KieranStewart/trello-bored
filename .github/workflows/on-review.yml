@@ -23,7 +23,8 @@ jobs:
           git fetch origin main
           git diff origin/main..HEAD > mydiff
           echo "mydiff = "
-          cat mydiffi
+          cat mydiff
+          
       # Uncomment api calls when endpoint is ready
       # - name: Make update request
       #   run: |
