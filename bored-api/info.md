@@ -39,14 +39,17 @@ Messaged when a pull request is made
 
 Messaged on branch creation
 
-### /confirm
-
-This endpoints will be reached out to by the Code plugin to confirm changes.
-
 ### /checkout
 
 This endpoint will be reached out to by the code plugin to indicate that they have checked out a branch, giving them the new todo list.
 
+### /confirm
+
+This endpoints will be reached out to by the Code plugin to get and confirm changes. A header argument **"session-id"** should be passed which contains the session for which the changes are to be made. Posting to this endpoint writes passed changes to board, getting it recives possible changes.
+
+### /init
+
+This endpoint is for creating a new session. Can pass **"session-id"** string to use a specific session ID or can get assigned one. The new session will have no tasks, they will have to be passed later.
 
 ### /admin/serverupdate
 

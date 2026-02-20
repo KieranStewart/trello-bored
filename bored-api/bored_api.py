@@ -1,5 +1,6 @@
 from flask import Flask, Response, request
 from update import secure_update
+from client import client_view, query_client, generate_session
 
 app = Flask(__name__)
 
@@ -18,6 +19,8 @@ def review(): # TODO Write this endpoint (review)
 
 @app.route('/merge', methods=['POST'])
 def merge(): # TODO Write this endpoint (merge)
+    # Query AI for changes
+    # Write changes to client
     return Response('Default Response', 200)
 
 @app.route('/pr', methods=['POST'])
@@ -28,13 +31,23 @@ def pr(): # TODO Write this endpoint (pr)
 def branch(): # TODO Write this endpoint (branch)
     return Response('Default Response', 200)
 
-@app.route('/confirm', methods=['POST'])
-def confirm(): # TODO Write this endpoint (confirm)
+@app.route('/checkout')
+def checkout(): # TODO Write this endpoint (checkout)
     return Response('Default Response', 200)
 
-@app.route('/checkout')
-def branch(): # TODO Write this endpoint (checkout)
-    return Response('Default Response', 200)
+@app.route('/confirm', methods=['POST', 'GET'])
+def confirm():
+    if request.method == 'GET':
+        print("getting")
+        return client_view(request.headers.get("session-id"))
+    else:
+        # TODO write sent changes to board
+        return Response("Not created", 400)
+
+@app.route('/init', methods=['POST'])
+def init():
+    session_id = request.headers.get('session-id', '')
+    return generate_session(session_id)
 
 @app.route('/admin/serverupdate')
 def update():
