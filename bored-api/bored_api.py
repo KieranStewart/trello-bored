@@ -2,6 +2,8 @@ import os
 from flask import Flask, Response, request
 from update import secure_update
 from client import client_view, query_client, generate_session
+from dotenv import load_dotenv
+from proxy_mgmt.implementations.github_projects import GithubProjects
 
 app = Flask(__name__)
 
@@ -53,6 +55,13 @@ def init():
 @app.route('/admin/serverupdate')
 def update():
     return secure_update(request.headers.get("admin-key"))
+
+load_dotenv()
+proxy = GithubProjects(
+    token=os.getenv("GITHUB_TOKEN"),
+    project_id=os.getenv("GITHUB_PROJECT_ID")
+)
+print(proxy.get_ticket(12))
 
 if __name__ == "__main__":
     app.run(port=8080)
