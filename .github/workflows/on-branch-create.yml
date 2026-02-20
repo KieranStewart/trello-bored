@@ -9,6 +9,10 @@ jobs:
       # needed to see code and branch name
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: View PR author
+        run: echo "This PR is opened by ${{ github.event.pull_request.user.login }}."
+
+
       # uncomment when endpoint is ready
       # - name: Make API request on branch creation
       #   run: |
