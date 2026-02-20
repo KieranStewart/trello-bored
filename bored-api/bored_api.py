@@ -1,9 +1,10 @@
 import os
 from flask import Flask, Response, request
 from update import secure_update
+from flask_sock import Sock
 
 app = Flask(__name__)
-
+sock = Sock(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -32,6 +33,21 @@ def branch(): # TODO Write this endpoint (branch)
 @app.route('/admin/serverupdate')
 def update():
     return secure_update(request.headers.get("admin-key"))
+
+clients = []
+
+@sock.route('/ws')
+def websocket(ws):
+    clients.append(ws)
+    print("New client connected. Total clients:", len(clients))
+    try:
+        while True:
+            data = ws.receive()
+            if data is None:
+                break  # Client disconnected
+            print("Received from client:", data)
+    finally:
+        clients.remove(ws)
 
 if __name__ == "__main__":
     app.run(port=8080)
