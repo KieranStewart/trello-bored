@@ -1,10 +1,8 @@
 import os
 from flask import Flask, Response, request
 from update import secure_update
-from flask_sock import Sock
 
 app = Flask(__name__)
-sock = Sock(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
