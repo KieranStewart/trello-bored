@@ -1,19 +1,3 @@
-<<<<<<< Updated upstream
-from proxy_mgmt.interface import BoardProxyInterface
-
-class GithubProjects(BoardProxyInterface):
-    def get_ticket(self, ticket_id):
-        return
-    
-    def get_tickets(self, category):
-        return
-
-    def get_all_tickets(self):
-        return
-
-    def get_categories(self):
-        return
-=======
 import requests
 from proxy_mgmt.interface import BoardProxyInterface
 from dataclasses import dataclass
@@ -29,10 +13,21 @@ class Label:
 class Ticket:
     item_id: str
     title: str
-    issue_id: str
+    number: str
     state: str
     body: str
     labels: list[Label]
+
+@dataclass
+class StatusInfo:
+    field_id: str
+    options: dict[str, str]
+
+    def get_option_id(self, name: str) -> str | None:
+        return self.options.get(name)
+
+    def names(self) -> list[str]:
+        return list(self.options.keys())
 
 
 class GithubProjects(BoardProxyInterface):
@@ -51,6 +46,14 @@ class GithubProjects(BoardProxyInterface):
         )
         response.raise_for_status()
         return response.json()
+    
+    def get_status(self, item):
+        status_info = self.get_categories()
+
+        for field in item["fieldValues"]["nodes"]:
+            if "name" in field and field["name"] in status_info.names():
+                return field["name"]
+        return None
 
     def get_ticket(self, ticket_id: str) -> Ticket:
         query = """
@@ -58,13 +61,21 @@ class GithubProjects(BoardProxyInterface):
             node(id: $itemId) {
                 ... on ProjectV2Item {
                     id
+                    fieldValues(first: 5) {
+                        nodes {
+                            ... on ProjectV2ItemFieldSingleSelectValue {
+                                name
+                            }
+                        }
+                    }
                     content {
                         ... on Issue {
                             id
+                            number
                             title
                             body
                             state
-                            labels(first: 100) {
+                            labels(first: 5) {
                                 nodes {
                                     id
                                     name
@@ -95,102 +106,42 @@ class GithubProjects(BoardProxyInterface):
         return Ticket(
             item_id=item["id"],
             title=item["content"]["title"],
-            issue_id=item["content"]["id"],
+            number=item["content"]["number"],
             body=item["content"]["body"],
             state=item["content"]["state"],
             labels=labels
         )
     
     def get_tickets(self, category) -> list[Ticket]:
-        query = """
-        query($projectId: ID!) {
-            node(id: $projectId) {
-                ... on ProjectV2 {
-                    items(first: 100) {
-                        nodes {
-                            id
-                            content {
-                                ... on Issue {
-                                    id
-                                    title
-                                    body
-                                    state
-                                    labels(first: 100) {
-                                        nodes {
-                                            id
-                                            name
-                                            color
-                                            description
-                                        }
-                                    }
-                                }
-                            }
-                                fieldValues(first: 20) {
-                                    nodes {
-                                        ... on ProjectV2ItemFieldSingleSelectValue {
-                                            name
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        """
-
-        json = self.run_query(query, {"projectId": self.project_id})
-        items = json["data"]["node"]["items"]["nodes"]
-        tickets: list[Ticket] = []
-
-        for item in items:
-            status = None
-            for field in item["fieldValues"]["nodes"]:
-                if "name" not in field:
-                    continue
-                if field["name"] == category:
-                    status = field["name"]
-                    break
-
-            if status != category:
-                continue
-
-            labels: list[Label] = [
-                Label(
-                    id=label["id"],
-                    name=label["name"],
-                    color=label.get("color"),
-                    description=label.get("description"),
-                )
-                for label in item["content"]["labels"]["nodes"]
-            ]
-
-            tickets.append(Ticket(
-                item_id=item["id"],
-                title=item["content"]["title"],
-                issue_id=item["content"]["id"],
-                body=item["content"]["body"],
-                state=item["content"]["state"],
-                labels=labels
-            ))
-
-        return tickets
+        return [
+            ticket
+            for ticket in self.get_all_tickets()
+            if ticket.status == category
+        ]
 
     def get_all_tickets(self) -> list[Ticket]:
         query = """
         query($projectId: ID!) {
             node(id: $projectId) {
                 ... on ProjectV2 {
-                    items(first: 100) {
+                    items(first: 50) {
                         nodes {
                             id
+                            fieldValues(first: 5) {
+                                nodes {
+                                    ... on ProjectV2ItemFieldSingleSelectValue {
+                                        name
+                                    }
+                                }
+                            }
                             content {
                                 ... on Issue {
                                     id
+                                    number
                                     title
                                     body
                                     state
-                                    labels(first: 100) {
+                                    labels(first: 5) {
                                         nodes {
                                             id
                                             name
@@ -225,7 +176,7 @@ class GithubProjects(BoardProxyInterface):
             ticket = Ticket(
                 item_id=item["id"],
                 title=item["content"]["title"],
-                issue_id=item["content"]["id"],
+                number=item["content"]["number"],
                 body=item["content"]["body"],
                 state=item["content"]["state"],
                 labels=labels
@@ -235,7 +186,7 @@ class GithubProjects(BoardProxyInterface):
 
         return tickets
 
-    def get_categories(self) -> list[str]:
+    def get_categories(self) -> StatusInfo:
         query = """
         query($projectId: ID!) {
             node(id: $projectId) {
@@ -243,7 +194,6 @@ class GithubProjects(BoardProxyInterface):
                     field(name: "Status") {
                         ... on ProjectV2SingleSelectField {
                             id
-                            name
                             options {
                                 id
                                 name
@@ -257,9 +207,45 @@ class GithubProjects(BoardProxyInterface):
 
         json = self.run_query(query, {"projectId": self.project_id})
         field = json["data"]["node"]["field"]
-        return [option["name"] for option in field["options"]]
->>>>>>> Stashed changes
+
+        return StatusInfo(
+            field_id=field["id"],
+            options={opt["name"]: opt["id"] for opt in field["options"]}
+        )
 
     def move_ticket(self, ticket_id, category):
-        return
-    
+        if self.get_ticket(ticket_id).status == category:
+            return
+
+        status_info = self.get_categories()
+        option_id = status_info.get_option_id(category)
+
+        mutation = """
+        mutation(
+            $projectId: ID!,
+            $itemId: ID!,
+            $fieldId: ID!,
+            $optionId: String!
+        ) {
+            updateProjectV2ItemFieldValue(
+                input: {
+                    projectId: $projectId,
+                    itemId: $itemId,
+                    fieldId: $fieldId,
+                    value: { singleSelectOptionId: $optionId }
+                }
+            ) {
+                projectV2Item { id }
+            }
+        }
+        """
+
+        variables = {
+            "projectId": self.project_id,
+            "itemId": ticket_id,
+            "fieldId": status_info.field_id,
+            "optionId": option_id
+        }
+
+        self.run_query(mutation, variables)
+        
