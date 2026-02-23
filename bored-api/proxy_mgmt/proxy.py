@@ -31,3 +31,15 @@ class BoardProxy:
 
     def move_ticket(self, ticket_id, category):
         return self.provider.move_ticket(ticket_id, category)
+    
+    def get_all_tools(self):
+        """
+        This function returns a list of all the tools available in the board proxy.
+        """
+        return [
+            self.get_ticket,
+            self.get_tickets,
+            self.get_all_tickets,
+            self.get_categories,
+            self.move_ticket
+        ]
