@@ -73,7 +73,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlContent() {
-        const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'sidebar.html');
+        // const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'sidebar.html');
+        const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'approve.html');
         return fs.readFileSync(htmlPath, 'utf8');
     }
 }

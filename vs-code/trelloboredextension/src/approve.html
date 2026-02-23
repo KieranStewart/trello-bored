@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trello Board Changes</title>
+    <style>
+      body {
+        padding: 10px;
+        font-family: var(--vscode-font-family);
+      }
+      .settings {
+        margin-bottom: 16px;
+        padding: 12px;
+        background: var(--vscode-editor-background);
+        border-radius: 4px;
+      }
+      input {
+        width: 100%;
+        padding: 6px;
+        margin: 4px 0 8px 0;
+        background: var(--vscode-input-background);
+        color: var(--vscode-input-foreground);
+        border: 1px solid var(--vscode-input-border);
+      }
+      label {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+      }
+      button {
+        padding: 8px 16px;
+        margin: 4px 4px 16px 0;
+        cursor: pointer;
+      }
+      .change-type-header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 12px;
+        margin-bottom: 8px;
+      }
+      .ticket-list {
+        margin-top: 8px;
+      }
+      .ticket {
+        padding: 10px;
+        margin: 6px 0;
+        border-left: 3px solid var(--vscode-button-background);
+        background: var(--vscode-editor-background);
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .ticket:hover {
+        background: var(--vscode-list-hoverBackground);
+      }
+      .ticket.selected {
+        outline: 2px solid var(--vscode-focusBorder);
+      }
+      .details {
+        margin-top: 12px;
+        padding: 10px;
+        background: var(--vscode-editor-background);
+        border-radius: 4px;
+      }
+      .actions {
+        margin-top: 10px;
+      }
+      .action-btn {
+        font-size: 18px;
+        padding: 6px 12px;
+        margin-right: 8px;
+        cursor: pointer;
+      }
+      .error {
+        color: var(--vscode-errorForeground);
+      }
+      .loading {
+        color: var(--vscode-descriptionForeground);
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Trello Board Changes</h2>
+
+    <div class="settings">
+      <label>Server Base URL:</label>
+      <input type="text" id="serverUrl" placeholder="http://localhost:3000" />
+
+      <label>Board URL:</label>
+      <input
+        type="text"
+        id="boardUrl"
+        placeholder="https://trello.com/b/abc123"
+      />
+
+      <button onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <button onclick="fetchChanges()">Refresh Changes</button>
+
+    <div id="changeTypeHeader" class="change-type-header">Select a Ticket</div>
+
+    <div id="ticketList" class="ticket-list"></div>
+
+    <div id="details" class="details" style="display: none">
+      <div id="description"></div>
+      <div class="actions">
+        <button class="action-btn" onclick="approveChange()">✔</button>
+        <button class="action-btn" onclick="rejectChange()">✖</button>
+      </div>
+    </div>
+
+    <div id="content"></div>
+
+    <script>
+      const vscode = acquireVsCodeApi();
+
+      let changes = [];
+      let selectedIndex = null;
+
+      vscode.postMessage({ command: "loadSettings" });
+
+      function saveSettings() {
+        const serverUrl = document.getElementById("serverUrl").value;
+        const boardUrl = document.getElementById("boardUrl").value;
+        vscode.postMessage({ command: "saveSettings", serverUrl, boardUrl });
+      }
+
+      function fetchChanges() {
+        document.getElementById("ticketList").innerHTML =
+          '<p class="loading">Loading...</p>';
+        document.getElementById("details").style.display = "none";
+        document.getElementById("changeTypeHeader").textContent = "Loading...";
+        vscode.postMessage({ command: "fetchChanges" });
+      }
+
+      window.addEventListener("message", (event) => {
+        const message = event.data;
+        const content = document.getElementById("content");
+
+        switch (message.command) {
+          case "settingsLoaded":
+            document.getElementById("serverUrl").value = message.serverUrl;
+            document.getElementById("boardUrl").value = message.boardUrl;
+            break;
+
+          case "updateChanges":
+            changes = message.data || [];
+            renderTickets();
+            break;
+
+          case "error":
+            content.innerHTML =
+              '<p class="error">Error: ' + message.message + "</p>";
+            break;
+        }
+      });
+
+      function renderTickets() {
+        const list = document.getElementById("ticketList");
+        list.innerHTML = "";
+        document.getElementById("changeTypeHeader").textContent =
+          "Select a Ticket";
+
+        if (!changes.length) {
+          list.innerHTML = "<p>No tickets with new changes found</p>";
+          return;
+        }
+
+        changes.forEach((change, index) => {
+          const div = document.createElement("div");
+          div.className = "ticket";
+          div.textContent = "Ticket: " + (change.ticketName || "Temp Name"); // title of the ticket
+          div.onclick = () => selectChange(index, div);
+          list.appendChild(div);
+        });
+      }
+
+      function selectChange(index, element) {
+        selectedIndex = index;
+        const selectedChange = changes[index];
+
+        document
+          .querySelectorAll(".ticket.selected")
+          .forEach((c) => c.classList.remove("selected"));
+        element.classList.add("selected");
+
+        document.getElementById("changeTypeHeader").textContent =
+          selectedChange.type || "Temp Selected Change"; // will be whichever api route is being called (depends on where the ticket will be moved)
+
+        document.getElementById("description").textContent =
+          selectedChange.description || "No description provided"; // will describe where the ticket is being moved to and maybe other descriptors
+
+        document.getElementById("details").style.display = "block";
+      }
+
+      function removeSelectedCard() {
+        if (selectedIndex === null) return;
+
+        changes.splice(selectedIndex, 1);
+        selectedIndex = null;
+
+        document.getElementById("details").style.display = "none";
+        renderTickets();
+      }
+
+      async function approveChange() {
+        if (selectedIndex === null) return;
+        const change = changes[selectedIndex];
+        // TODO send change to API here
+        removeSelectedCard();
+      }
+
+      function rejectChange() {
+        if (selectedIndex === null) return;
+        removeSelectedCard();
+      }
+
+      fetchChanges();
+    </script>
+  </body>
+</html>
