@@ -55,12 +55,6 @@ def init():
 def update():
     return secure_update(request.headers.get("admin-key"))
 
-load_dotenv()
-proxy = GithubProjects(
-    token=os.getenv("GITHUB_TOKEN"),
-    project_id=os.getenv("GITHUB_PROJECT_ID")
-)
-print(proxy.get_ticket(12))
 
 if __name__ == "__main__":
     app.run(port=8080)
