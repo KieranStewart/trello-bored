@@ -4,18 +4,18 @@ The bored API will be called when the following actions are taken with the follo
 
 ## Structure and Requirements
 
-* On Review
-    * Branch Title
-    * Diff
-* On Merge
-    * Branch Title
-    * Diff
-* On PR
-    * Branch Title
-    * Diff
-* On Branch Creation
-    * Branch Title
-    * Branch From
+- On Review
+  - Branch Title
+  - Diff
+- On Merge
+  - Branch Title
+  - Diff
+- On PR
+  - Branch Title
+  - Diff
+- On Branch Creation
+  - Branch Title
+  - Branch From
 
 ## Endpoints
 
@@ -76,4 +76,18 @@ Create /bored-api/.env and add the following, replacing the password fields with
 ```text
 admin-key: <key>
 path: <pathtorepo>
+```
+```
+
+### Connecting to your GitHub Account
+
+Create a GitHub token by clicking on your account logo, going to Settings->Developer Settings on the left panel->Personal access tokens->Tokens (classic)
+
+Make sure to click the checkbox for Project when creating the token
+
+Copy the GitHub token and add the following to your .evn file:
+
+```text
+GITHUB_TOKEN=<your token>
+GITHUB_PROJECT_ID='PVT_kwHOBy7VJ84BOhPe'
 ```
