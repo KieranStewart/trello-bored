@@ -21,7 +21,22 @@ def review(): # TODO Write this endpoint (review)
 
 @app.route('/merge', methods=['POST'])
 def merge(): # TODO Write this endpoint (merge)
+    # Parse message
+    """
+    Action -> Server
+{username: "github username",
+ diff: "difference between main and pr"
+ branch-name: "name of branch"
+ action-type: "merge"}
+ """
+    raw_body = request.get_data()
+    if not request.is_json():
+        return Response("NOT JSON?!?!", 400)
+    json_data = request.get_json()
+    if not all(_ in json_data.keys() for _ in ["username", "diff", "branch-name", "action-type"]):
+        return Response("Things are missing", 400)
     # Query AI for changes
+    
     # Write changes to client
     return Response('Default Response', 200)
 
