@@ -1,0 +1,27 @@
+<div id="approve-view">
+    <h3>Pending Approval Requests</h3>
+    <div id="approve-content"></div>
+</div>
+
+<script>
+function renderApproveView(data) {
+    const content = document.getElementById('approve-content');
+    if (!data || data.length === 0) {
+        content.innerHTML = '<p>No pending requests</p>';
+        return;
+    }
+    
+    let html = '';
+    data.forEach(change => {
+        html += '<div class="change-item">' +
+            '<strong>' + (change.type || 'Update') + '</strong>: ' + (change.description || '') +
+            '<br><small>' + (change.timestamp || '') + '</small>' +
+            '<div class="change-actions">' +
+            '<button class="accept-btn" onclick="acceptChange(\'' + change.id + '\')">Accept</button>' +
+            '<button class="decline-btn" onclick="declineChange(\'' + change.id + '\')">Decline</button>' +
+            '</div>' +
+        '</div>';
+    });
+    content.innerHTML = html;
+}
+</script>
