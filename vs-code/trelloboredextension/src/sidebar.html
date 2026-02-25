@@ -53,10 +53,11 @@
             currentView = view;
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            vscode.postMessage({ command: 'loadView', view });
             
             if (view === 'approve' || view === 'historical') {
                 fetchChanges();
+            } else {
+                vscode.postMessage({ command: 'loadView', view });
             }
         }
         
@@ -83,19 +84,10 @@
                     break;
                 case 'renderView':
                     document.getElementById('content').innerHTML = message.html;
-                    if (currentData && currentView === 'approve' && typeof renderApproveView === 'function') {
-                        renderApproveView(currentData);
-                    } else if (currentData && currentView === 'historical' && typeof renderHistoricalView === 'function') {
-                        renderHistoricalView(currentData);
-                    }
                     break;
                 case 'updateChanges':
                     currentData = message.data;
-                    if (currentView === 'approve' && typeof renderApproveView === 'function') {
-                        renderApproveView(currentData);
-                    } else if (currentView === 'historical' && typeof renderHistoricalView === 'function') {
-                        renderHistoricalView(currentData);
-                    }
+                    vscode.postMessage({ command: 'loadView', view: currentView, data: currentData });
                     break;
                 case 'error':
                     document.getElementById('content').innerHTML = '<p class="error">Error: ' + message.message + '</p>';

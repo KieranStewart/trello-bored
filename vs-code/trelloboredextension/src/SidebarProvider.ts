@@ -32,7 +32,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     this._loadSettings();
                     break;
                 case 'loadView':
-                    this._loadViewContent(message.view);
+                    this._loadViewContent(message.view, message.data);
                     break;
                 case 'startPolling':
                     this._startPolling(message.interval);
@@ -66,10 +66,45 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, boardUrl });
     }
 
-    private _loadViewContent(view: string) {
+    private _loadViewContent(view: string, data?: any) {
         const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'views', `${view}.html`);
-        const html = fs.readFileSync(htmlPath, 'utf8');
+        let html = fs.readFileSync(htmlPath, 'utf8');
+        
+        if (view === 'approve' && data) {
+            html = html.replace('{{CONTENT}}', this._renderApproveItems(data));
+        } else if (view === 'historical' && data) {
+            html = html.replace('{{CONTENT}}', this._renderHistoricalItems(data));
+        } else if (view === 'approve' || view === 'historical') {
+            html = html.replace('{{CONTENT}}', '<p>No data available</p>');
+        }
+        
         this._view?.webview.postMessage({ command: 'renderView', html });
+    }
+
+    private _renderApproveItems(data: any[]): string {
+        if (!data || data.length === 0) return '<p>No pending requests</p>';
+        
+        return data.map(change => 
+            `<div class="change-item">
+                <strong>${change.type || 'Update'}</strong>: ${change.description || ''}
+                <br><small>${change.timestamp || ''}</small>
+                <div class="change-actions">
+                    <button class="accept-btn" onclick="acceptChange('${change.id}')">Accept</button>
+                    <button class="decline-btn" onclick="declineChange('${change.id}')">Decline</button>
+                </div>
+            </div>`
+        ).join('');
+    }
+
+    private _renderHistoricalItems(data: any[]): string {
+        if (!data || data.length === 0) return '<p>No historical data</p>';
+        
+        return data.map(change => 
+            `<div class="change-item">
+                <strong>${change.type || 'Update'}</strong>: ${change.description || ''}
+                <br><small>${change.timestamp || ''}</small>
+            </div>`
+        ).join('');
     }
 
     private _startPolling(interval: number = 5000) {

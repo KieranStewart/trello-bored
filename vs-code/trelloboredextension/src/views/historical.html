@@ -1,23 +1,2 @@
-<div id="historical-view">
-    <h3>Historical Cards</h3>
-    <div id="historical-content"></div>
-</div>
-
-<script>
-function renderHistoricalView(data) {
-    const content = document.getElementById('historical-content');
-    if (!data || data.length === 0) {
-        content.innerHTML = '<p>No historical data</p>';
-        return;
-    }
-    
-    let html = '';
-    data.forEach(change => {
-        html += '<div class="change-item">' +
-            '<strong>' + (change.type || 'Update') + '</strong>: ' + (change.description || '') +
-            '<br><small>' + (change.timestamp || '') + '</small>' +
-        '</div>';
-    });
-    content.innerHTML = html;
-}
-</script>
+<h3>Historical Cards</h3>
+<div id="historical-content">{{CONTENT}}</div>
