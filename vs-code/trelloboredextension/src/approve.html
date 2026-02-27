@@ -170,7 +170,7 @@
         changes.forEach((change, index) => {
           const div = document.createElement("div");
           div.className = "ticket";
-          div.textContent = "Ticket: " + (change.ticketName || "Temp Name"); // title of the ticket
+          div.textContent = change.name || "Temp Name"; // title of the ticket
           div.onclick = () => selectChange(index, div);
           list.appendChild(div);
         });
