@@ -5,6 +5,12 @@ proxy = BoardProxy()
 def get_all_labels():
     return proxy.get_all_labels()
 
+def get_all_prs():
+    return proxy.get_all_prs()
+
+def get_pr(pr_number):
+    return proxy.get_pr(pr_number)
+
 def get_ticket(item_id):
     """
     This function retrieves a ticket from the board proxy using the provided item id.
@@ -30,5 +36,7 @@ def get_tools():
         get_all_tickets,
         get_categories,
         move_ticket,
-        get_all_labels
+        get_all_labels,
+        get_all_prs,
+        get_pr
     ]
