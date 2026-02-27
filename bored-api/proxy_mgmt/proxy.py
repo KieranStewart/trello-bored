@@ -37,6 +37,12 @@ class BoardProxy:
     def get_all_labels(self):
         return self.provider.get_all_labels()
     
+    def get_all_prs(self):
+        return self.provider.get_all_prs()
+    
+    def get_pr(self, pr_number):
+        return self.provider.get_pr(pr_number)
+    
     def get_all_tools(self):
         """
         This function returns a list of all the tools available in the board proxy.
@@ -51,4 +57,4 @@ class BoardProxy:
 
 if __name__ == "__main__":
     proxy = BoardProxy()
-    print(proxy.get_all_labels())
+    print(proxy.get_all_prs())
