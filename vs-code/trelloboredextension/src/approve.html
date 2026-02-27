@@ -80,24 +80,6 @@
     </style>
   </head>
   <body>
-    <h2>Trello Board Changes</h2>
-
-    <div class="settings">
-      <label>Server Base URL:</label>
-      <input type="text" id="serverUrl" placeholder="http://localhost:3000" />
-
-      <label>Board URL:</label>
-      <input
-        type="text"
-        id="boardUrl"
-        placeholder="https://trello.com/b/abc123"
-      />
-
-      <button onclick="saveSettings()">Save Settings</button>
-    </div>
-
-    <button onclick="fetchChanges()">Refresh Changes</button>
-
     <div id="changeTypeHeader" class="change-type-header">Select a Ticket</div>
 
     <div id="ticketList" class="ticket-list"></div>
