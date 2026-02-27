@@ -41,8 +41,14 @@ def merge(): # TODO Write this endpoint (merge)
     return Response('Default Response', 200)
 
 @app.route('/pr', methods=['POST'])
-def pr(): # TODO Write this endpoint (pr)
-    return Response('Default Response', 200)
+def pr(): # TODO Write this endpoint (pr)raw_body = request.get_data()
+    if not request.is_json():
+        return Response("NOT JSON?!?!", 400)
+    json_data = request.get_json()
+    if not all(_ in json_data.keys() for _ in ["username", "diff", "branch-name", "action-type"]):
+        return Response("Things are missing", 400)
+    
+    
 
 @app.route('/branch', methods=['POST'])
 def branch(): # TODO Write this endpoint (branch)
