@@ -35,7 +35,7 @@ def query_client(session_id:str, user_id:str, tasks):
         if user_id in sessions[session_id].keys():
             sessions[session_id][user_id].extend(tasks)
             return Response("Succsessfully added tasks", 200)
-        else if:
+        else:
             new_user_id = generate_user(session_id=session_id, user_id=user_id).headers.get('user-id')
             sessions[session_id][user_id].extend(tasks)
             out = Response("Succsessfully generated user and added tasks", 201)
