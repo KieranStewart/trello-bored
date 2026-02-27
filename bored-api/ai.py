@@ -5,7 +5,7 @@ from bored_api import pr
 from dotenv import load_dotenv
 import os
 from proxy_mgmt.proxy import BoardProxy
-from tools import get_tools, get_ticket, get_all_tickets
+from tools import get_tools, get_ticket, get_all_tickets, get_all_labels
 
 load_dotenv()
 
@@ -39,7 +39,7 @@ async def review_pr_and_return_set_of_tickets(pr_num: str) -> str | None:
     response = await query_agent(get_tools(), system_prompt, user_input)
     return response
 
-async def review_ticket_and_generate_tags(ticket_id: int) -> str | None:
+async def review_ticket_and_generate_labels(ticket_id: int) -> str | None:
     tickets = get_all_tickets()
     # print(tickets)
     ticket_ids = [ticket.number for ticket in tickets]
@@ -47,19 +47,19 @@ async def review_ticket_and_generate_tags(ticket_id: int) -> str | None:
         raise ValueError(f"Ticket ID {ticket_id} not found in board")
     ticket = tickets[ticket_ids.index(ticket_id)]
     system_prompt = f"""
-    You are a helpful assistant that reviews a GitHub issue and generates a list of relevant tags based on the content of the issue.
+    You are a helpful assistant that reviews a GitHub issue and generates a list of relevant labels based on the content of the issue.
     Please provide your response in the following format:
-    <tag_1>, <tag_2>, ...
-    Say "N/A" if there are no relevant tags. You can also suggest creating new tags if you think they would be relevant.
+    <label_1>, <label_2>, ...
+    Say "N/A" if there are no relevant labels. Please only return existing labels that are relevant to the issue, do not make up new labels.
     You have access to the following tools:
     """
     for tool in get_tools():
         system_prompt += f"- {tool.__name__}\n"
     
-    user_input = f"Review issue {ticket.item_id} and generate a list of relevant tags"
+    user_input = f"Review issue {ticket.item_id} and generate a list of relevant labels"
     response = await query_agent(get_tools(), system_prompt, user_input)
     return response
 
 if __name__ == "__main__":
-    response = asyncio.run(review_ticket_and_generate_tags(63))
+    response = asyncio.run(review_ticket_and_generate_labels(63))
     print(response)

@@ -2,6 +2,9 @@ from proxy_mgmt.proxy import BoardProxy
 
 proxy = BoardProxy()
 
+def get_all_labels():
+    return proxy.get_all_labels()
+
 def get_ticket(item_id):
     """
     This function retrieves a ticket from the board proxy using the provided item id.
@@ -26,5 +29,6 @@ def get_tools():
         get_tickets,
         get_all_tickets,
         get_categories,
-        move_ticket
+        move_ticket,
+        get_all_labels
     ]

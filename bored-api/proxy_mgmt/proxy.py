@@ -34,6 +34,9 @@ class BoardProxy:
     def move_ticket(self, ticket_id, category):
         return self.provider.move_ticket(ticket_id, category)
     
+    def get_all_labels(self):
+        return self.provider.get_all_labels()
+    
     def get_all_tools(self):
         """
         This function returns a list of all the tools available in the board proxy.
@@ -45,3 +48,7 @@ class BoardProxy:
             self.get_categories,
             self.move_ticket
         ]
+
+if __name__ == "__main__":
+    proxy = BoardProxy()
+    print(proxy.get_all_labels())

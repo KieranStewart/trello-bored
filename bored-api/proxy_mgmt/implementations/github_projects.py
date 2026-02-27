@@ -54,6 +54,29 @@ class GithubProjects(BoardProxyInterface):
             if "name" in field and field["name"] in status_info.names():
                 return field["name"]
         return None
+    
+    def get_all_labels(self):
+        query = """
+        query($owner: String!, $name: String!) {
+            repository(owner: $owner, name: $name) {
+                labels(first: 100) {
+                    nodes {
+                        id
+                        name
+                        color
+                        description
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                    }
+                }
+            }
+        }
+        """
+        json = self.run_query(query, {"owner": "KieranStewart", "name": "trello-bored"})
+        tags = json["data"]["repository"]["labels"]["nodes"]
+        return tags
 
     def get_ticket(self, ticket_id: str) -> Ticket:
         query = """
@@ -248,4 +271,3 @@ class GithubProjects(BoardProxyInterface):
         }
 
         self.run_query(mutation, variables)
-        
