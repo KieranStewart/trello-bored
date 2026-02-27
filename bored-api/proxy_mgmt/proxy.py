@@ -3,10 +3,12 @@ from proxy_mgmt.implementations.github_projects import GithubProjects
 
 PROJECT_PROVIDER = "github" # change this value to update which board provider to use
 
+from dotenv import load_dotenv
+load_dotenv()
+
 class BoardProxy:
     def __init__(self):
         if PROJECT_PROVIDER == "github":
-            self.provider = GithubProjects()
             token = os.getenv("GITHUB_TOKEN")
             project_id = os.getenv("GITHUB_PROJECT_ID")
 

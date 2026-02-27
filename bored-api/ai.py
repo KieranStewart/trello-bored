@@ -5,12 +5,9 @@ from bored_api import pr
 from dotenv import load_dotenv
 import os
 from proxy_mgmt.proxy import BoardProxy
+from tools import get_tools, get_ticket, get_all_tickets
 
 load_dotenv()
-
-def get_tools():
-    proxy = BoardProxy()
-    return proxy.get_all_tools()
 
 async def query_agent(tools: list[function], system_prompt: str, user_input: str):
     agent = FunctionAgent(
@@ -25,7 +22,7 @@ async def query_agent(tools: list[function], system_prompt: str, user_input: str
         response = None
     return response
 
-async def review_pr_and_return_set_of_tickets(pr_url: str) -> str | None:
+async def review_pr_and_return_set_of_tickets(pr_num: str) -> str | None:
     system_prompt = f"""
     You are a helpful assistant that reviews a GitHub PR and returns a list of possible issue IDs that might be related.
     Please provide your response in the following format:
@@ -38,10 +35,31 @@ async def review_pr_and_return_set_of_tickets(pr_url: str) -> str | None:
     system_prompt += f"You can also use the following board proxy methods to get information about tickets:\n"
 
     
-    user_input = f"Review the PR at {pr_url} and return a list of issues"
+    user_input = f"Review PR #{pr_num} and return a list of issues"
+    response = await query_agent(get_tools(), system_prompt, user_input)
+    return response
+
+async def review_ticket_and_generate_tags(ticket_id: int) -> str | None:
+    tickets = get_all_tickets()
+    # print(tickets)
+    ticket_ids = [ticket.number for ticket in tickets]
+    if ticket_id not in ticket_ids:
+        raise ValueError(f"Ticket ID {ticket_id} not found in board")
+    ticket = tickets[ticket_ids.index(ticket_id)]
+    system_prompt = f"""
+    You are a helpful assistant that reviews a GitHub issue and generates a list of relevant tags based on the content of the issue.
+    Please provide your response in the following format:
+    <tag_1>, <tag_2>, ...
+    Say "N/A" if there are no relevant tags. You can also suggest creating new tags if you think they would be relevant.
+    You have access to the following tools:
+    """
+    for tool in get_tools():
+        system_prompt += f"- {tool.__name__}\n"
+    
+    user_input = f"Review issue {ticket.item_id} and generate a list of relevant tags"
     response = await query_agent(get_tools(), system_prompt, user_input)
     return response
 
 if __name__ == "__main__":
-    response = asyncio.run(review_pr_and_return_set_of_tickets("https://github.com/your-repo/your-pr"))
+    response = asyncio.run(review_ticket_and_generate_tags(63))
     print(response)
