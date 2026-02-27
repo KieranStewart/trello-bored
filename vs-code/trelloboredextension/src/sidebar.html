@@ -25,10 +25,13 @@
     <h2>Trello Board Changes</h2>
     <div class="settings">
         <label>Server Base URL:</label>
-        <input type="text" id="serverUrl" placeholder="http://localhost:3000">
-        <label>Board URL:</label>
-        <input type="text" id="boardUrl" placeholder="https://trello.com/b/abc123">
+        <input type="text" id="serverUrl" placeholder="http://localhost:8080">
+        <label>Username:</label>
+        <input type="text" id="username" placeholder="Enter username">
+        <label>Session ID:</label>
+        <input type="text" id="sessionId" placeholder="Enter session ID">
         <button onclick="saveSettings()">Save Settings</button>
+        <button onclick="createSession()">Create Session</button>
     </div>
     <div class="nav-buttons">
         <button class="nav-btn active" onclick="showView('approve')">Approve Request</button>
@@ -45,8 +48,13 @@
         
         function saveSettings() {
             const serverUrl = document.getElementById('serverUrl').value;
-            const boardUrl = document.getElementById('boardUrl').value;
-            vscode.postMessage({ command: 'saveSettings', serverUrl, boardUrl });
+            const username = document.getElementById('username').value;
+            const sessionId = document.getElementById('sessionId').value;
+            vscode.postMessage({ command: 'saveSettings', serverUrl, username, sessionId });
+        }
+
+        function createSession() {
+            vscode.postMessage({ command: 'createSession' });
         }
         
         function showView(view) {
@@ -80,7 +88,8 @@
             switch (message.command) {
                 case 'settingsLoaded':
                     document.getElementById('serverUrl').value = message.serverUrl;
-                    document.getElementById('boardUrl').value = message.boardUrl;
+                    document.getElementById('username').value = message.username;
+                    document.getElementById('sessionId').value = message.sessionId;
                     break;
                 case 'renderView':
                     document.getElementById('content').innerHTML = message.html;
