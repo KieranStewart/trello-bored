@@ -12,7 +12,7 @@ Sessions represent projects (github projects + github repo) and the users are in
 # Task dictionary would be refrenced by their refrence id
 sessions = {
     "session0":{
-        "user0"[
+        "user0":[
             {
                 "type":"Card Created",
                 "description":"New card 'implement login feature' added to the to-do list",
@@ -35,15 +35,22 @@ def query_client(session_id:str, user_id:str, tasks):
         if user_id in sessions[session_id].keys():
             sessions[session_id][user_id].extend(tasks)
             return Response("Succsessfully added tasks", 200)
-        else:
-            return Response("User ID not found", 404)
+        else if:
+            new_user_id = generate_user(session_id=session_id, user_id=user_id).headers.get('user-id')
+            sessions[session_id][user_id].extend(tasks)
+            out = Response("Succsessfully generated user and added tasks", 201)
+            out.headers.add("user-id", new_user_id)
+            return out
     else:
         return Response("Session ID not found", 404)
     
 
 def client_view(session_id:str, user_id:str):
     if session_id in sessions.keys():
-        return jsonify(sessions[session_id][user_id])
+        if user_id in sessions[session_id].keys():
+            return jsonify(sessions[session_id][user_id])
+        else:
+            return Response("User ID not found", 404)
     else:
         return Response("Session ID not found", 404)
 
