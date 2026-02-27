@@ -3,10 +3,12 @@ from proxy_mgmt.implementations.github_projects import GithubProjects
 
 PROJECT_PROVIDER = "github" # change this value to update which board provider to use
 
+from dotenv import load_dotenv
+load_dotenv()
+
 class BoardProxy:
     def __init__(self):
         if PROJECT_PROVIDER == "github":
-            self.provider = GithubProjects()
             token = os.getenv("GITHUB_TOKEN")
             project_id = os.getenv("GITHUB_PROJECT_ID")
 
@@ -31,3 +33,22 @@ class BoardProxy:
 
     def move_ticket(self, ticket_id, category):
         return self.provider.move_ticket(ticket_id, category)
+    
+    def get_all_labels(self):
+        return self.provider.get_all_labels()
+    
+    def get_all_tools(self):
+        """
+        This function returns a list of all the tools available in the board proxy.
+        """
+        return [
+            self.get_ticket,
+            self.get_tickets,
+            self.get_all_tickets,
+            self.get_categories,
+            self.move_ticket
+        ]
+
+if __name__ == "__main__":
+    proxy = BoardProxy()
+    print(proxy.get_all_labels())
