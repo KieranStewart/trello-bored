@@ -17,13 +17,18 @@
       "properties": {
         "trelloboredextension.serverUrl": {
           "type": "string",
-          "default": "http://localhost:3000",
+          "default": "http://localhost:8080",
           "description": "Server base URL for API calls"
         },
-        "trelloboredextension.boardUrl": {
+        "trelloboredextension.username": {
           "type": "string",
           "default": "",
-          "description": "Trello board URL"
+          "description": "Username for the session"
+        },
+        "trelloboredextension.sessionId": {
+          "type": "string",
+          "default": "",
+          "description": "Session ID for API authentication"
         }
       }
     },
