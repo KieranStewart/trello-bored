@@ -1,7 +1,7 @@
 import os
 from flask import Flask, Response, request
 from update import secure_update
-from client import client_view, query_client, generate_session
+from client import client_view, query_client, generate_session, sessions # FIXME Remove sessions debugging
 from dotenv import load_dotenv
 from proxy_mgmt.implementations.github_projects import GithubProjects
 
@@ -10,10 +10,9 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return Response('Hello World!', 200)
+        return Response('<h1>Welcome to Bored API</h1>\nThis is the debug screen, if you are seeing this in production then don\'t.<br><br>\n' + str(sessions), 200)
     elif request.method == 'POST':
-        print("Posted:", request.form.keys())
-        return Response('Pushed?!', 200)
+        return Response('Post recieved at default endpoint, no action taken', 200)
 
 @app.route('/review', methods=['POST'])
 def review(): # TODO Write this endpoint (review)
@@ -71,10 +70,10 @@ def init():
     session_id = request.headers.get('session-id', '')
     return generate_session(session_id)
 
-@app.route('/admin/serverupdate')
-def update():
-    return secure_update(request.headers.get("admin-key"))
+# @app.route('/admin/serverupdate')
+# def update():
+#     return secure_update(request.headers.get("admin-key"))
 
 
 if __name__ == "__main__":
-    app.run(port=8080)
+    app.run(port=8080, host="0.0.0.0")

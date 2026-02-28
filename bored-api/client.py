@@ -1,5 +1,8 @@
 from uuid import uuid4
 from flask import Response, jsonify
+from proxy_mgmt.proxy import BoardProxy
+
+PROJ_BOARD = BoardProxy()
 
 """
 Sessions are how the server keeps track of which tasks a user has yet to confirm.
@@ -28,6 +31,19 @@ sessions = {
         ]
     }
 }
+
+def confirm_slide(session_id:str, user_id:str, task_id, confirm):
+    if session_id in sessions.keys() and user_id in sessions[session_id][user_id]:
+        for action in sessions[session_id][user_id]:
+            if action["task_id"] == task_id:
+                if confirm: take_action(action)
+                sessions[session_id][user_id].remove(action)
+                return Response("Task removed", 200)
+
+def take_action(action:dict[str, str]):
+    # TODO Set standard names for each of the actions
+    if action["type"] == "Card Moved":
+        PROJ_BOARD.move_ticket()
 
 # FIXME change usage to match query
 def query_client(session_id:str, user_id:str, tasks):
