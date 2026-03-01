@@ -70,10 +70,11 @@ async def review_pr_and_get_assoc_tickets(pr_number: int) -> str | None:
         raise ValueError(f"PR number {pr_number} not found in board")
     pr = prs[pr_numbers.index(pr_number)]
     system_prompt = f"""
-    You are a helpful assistant that reviews a GitHub pull request and generates a list of associated ticket IDs based on the content of the pull request.
+    You are a helpful assistant that reviews a GitHub pull request and generates a list of most closely related tickets based on the content of the pull request.
     Please provide your response in the following format:
     <ticket_id_1>, <ticket_id_2>, ...
     Say "N/A" if there are no relevant tickets. Please only return existing ticket IDs that are relevant to the pull request, do not make up new ticket IDs.
+    Your most powerful tool is get_all_tickets, use it to review all tickets and find the most relevant ones to the PR. You can also use get_ticket to get more information about specific tickets if needed.
     You have access to the following tools:
     """
     for tool in get_tools():
@@ -84,5 +85,5 @@ async def review_pr_and_get_assoc_tickets(pr_number: int) -> str | None:
     return response
 
 if __name__ == "__main__":
-    response = asyncio.run(review_pr_and_get_labels(66))
+    response = asyncio.run(review_pr_and_get_assoc_tickets(49))
     print(response)
