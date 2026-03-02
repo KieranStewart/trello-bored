@@ -103,11 +103,23 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const todoCssUri = this._view?.webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'todo.css')
         ).toString() ?? '';
+        const approveJsUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'approve.js')
+        ).toString() ?? '';
+        const historicalJsUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'historical.js')
+        ).toString() ?? '';
+        const todoJsUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'todo.js')
+        ).toString() ?? '';
 
         html = html
             .replace(/\.\.\/style\/approve\.css/g, approveCssUri)
             .replace(/\.\.\/style\/historical\.css/g, historicalCssUri)
-            .replace(/\.\.\/style\/todo\.css/g, todoCssUri);
+            .replace(/\.\.\/style\/todo\.css/g, todoCssUri)
+            .replace(/\.\.\/script\/approve\.js/g, approveJsUri)
+            .replace(/\.\.\/script\/historical\.js/g, historicalJsUri)
+            .replace(/\.\.\/script\/todo\.js/g, todoJsUri);
         
         if (view === 'approve' && data) {
             html = html.replace('{{CONTENT}}', this._renderApproveItems(data));
