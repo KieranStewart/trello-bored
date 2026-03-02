@@ -242,12 +242,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlContent() {
-        const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'sidebar.html');
-        const sidebarCssUri = this._view?.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'sidebar.css')
+    const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'sidebar.html');
+
+    const sidebarCssUri = this._view?.webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'sidebar.css')
         ).toString() ?? '';
 
-        const html = fs.readFileSync(htmlPath, 'utf8');
-        return html.replace('./style/sidebar.css', sidebarCssUri);
+    const sidebarJsUri = this._view?.webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'sidebar.js')
+        ).toString() ?? '';
+
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    return html
+        .replace('./style/sidebar.css', sidebarCssUri)
+        .replace('./script/sidebar.js', sidebarJsUri);
     }
 }
