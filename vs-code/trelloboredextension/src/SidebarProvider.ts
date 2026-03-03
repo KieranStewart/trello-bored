@@ -6,6 +6,7 @@ import * as path from 'path';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
+    private _pollingInterval?: NodeJS.Timeout;
 
     constructor(private readonly _extensionUri: vscode.Uri) {}
 
@@ -25,50 +26,203 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     await this._fetchAndDisplayChanges();
                     break;
                 case 'saveSettings':
-                    await this._saveSettings(message.serverUrl, message.boardUrl);
+                    await this._saveSettings(message.serverUrl, message.username, message.sessionId);
                     break;
                 case 'loadSettings':
                     this._loadSettings();
                     break;
+                case 'loadView':
+                    this._loadViewContent(message.view, message.data);
+                    break;
+                case 'startPolling':
+                    this._startPolling(message.interval);
+                    break;
+                case 'stopPolling':
+                    this._stopPolling();
+                    break;
+                case 'acceptChange':
+                    await this._handleChange(message.changeId, true);
+                    break;
+                case 'declineChange':
+                    await this._handleChange(message.changeId, false);
+                    break;
+                case 'createSession':
+                    await this._createSession();
+                    break;
             }
         });
+
+        webviewView.onDidDispose(() => this._stopPolling());
     }
 
-    private async _saveSettings(serverUrl: string, boardUrl: string) {
+    private async _saveSettings(serverUrl: string, username: string, sessionId: string) {
         const config = vscode.workspace.getConfiguration('trelloboredextension');
         await config.update('serverUrl', serverUrl, vscode.ConfigurationTarget.Global);
-        await config.update('boardUrl', boardUrl, vscode.ConfigurationTarget.Global);
+        await config.update('username', username, vscode.ConfigurationTarget.Global);
+        await config.update('sessionId', sessionId, vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage('Settings saved!');
     }
 
     private _loadSettings() {
         const config = vscode.workspace.getConfiguration('trelloboredextension');
-        const serverUrl = config.get<string>('serverUrl', 'http://localhost:3000');
-        const boardUrl = config.get<string>('boardUrl', '');
-        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, boardUrl });
+        const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+        const username = config.get<string>('username', '');
+        const sessionId = config.get<string>('sessionId', '');
+        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId });
+    }
+
+    private async _createSession() {
+        try {
+            const config = vscode.workspace.getConfiguration('trelloboredextension');
+            const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+            const sessionId = config.get<string>('sessionId', '');
+            
+            const response = await this._httpPostWithHeaders(`${serverUrl}/init`, { 'session-id': sessionId });
+            const newSessionId = response.headers['session-id'];
+            
+            if (newSessionId) {
+                await config.update('sessionId', newSessionId, vscode.ConfigurationTarget.Global);
+                this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username: config.get<string>('username', ''), sessionId: newSessionId });
+                vscode.window.showInformationMessage(`Session created: ${newSessionId}`);
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to create session: ${error}`);
+        }
+    }
+
+    private _loadViewContent(view: string, data?: any) {
+        const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'views', `${view}.html`);
+        let html = fs.readFileSync(htmlPath, 'utf8');
+        
+        if (view === 'approve' && data) {
+            html = html.replace('{{CONTENT}}', this._renderApproveItems(data));
+        } else if (view === 'historical' && data) {
+            html = html.replace('{{CONTENT}}', this._renderHistoricalItems(data));
+        } else if (view === 'approve' || view === 'historical') {
+            html = html.replace('{{CONTENT}}', '<p>No data available</p>');
+        }
+        
+        this._view?.webview.postMessage({ command: 'renderView', html });
+    }
+
+    private _renderApproveItems(data: any[]): string {
+        if (!data || data.length === 0) return '<p>No pending requests</p>';
+        
+        return data.map(change => 
+            `<div class="change-item">
+                <strong>${change.type || 'Update'}</strong>: ${change.description || ''}
+                <br><small>${change.timestamp || ''}</small>
+                <div class="change-actions">
+                    <button class="accept-btn" onclick="acceptChange('${change.task_id || change.id}')">Accept</button>
+                    <button class="decline-btn" onclick="declineChange('${change.task_id || change.id}')">Decline</button>
+                </div>
+            </div>`
+        ).join('');
+    }
+
+    private _renderHistoricalItems(data: any[]): string {
+        if (!data || data.length === 0) return '<p>No historical data</p>';
+        
+        return data.map(change => 
+            `<div class="change-item">
+                <strong>${change.type || 'Update'}</strong>: ${change.description || ''}
+                <br><small>${change.timestamp || ''}</small>
+            </div>`
+        ).join('');
+    }
+
+    private _startPolling(interval: number = 5000) {
+        this._stopPolling();
+        this._pollingInterval = setInterval(() => this._fetchAndDisplayChanges(), interval);
+    }
+
+    private _stopPolling() {
+        if (this._pollingInterval) {
+            clearInterval(this._pollingInterval);
+            this._pollingInterval = undefined;
+        }
     }
 
     private async _fetchAndDisplayChanges() {
         try {
             const config = vscode.workspace.getConfiguration('trelloboredextension');
-            const serverUrl = config.get<string>('serverUrl', 'http://localhost:3000');
-            const boardUrl = config.get<string>('boardUrl', '');
-            const apiUrl = `${serverUrl}/api/changes${boardUrl ? '?board=' + boardUrl : ''}`;
-            const data = await this._httpGet(apiUrl);
+            const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+            const sessionId = config.get<string>('sessionId', '');
+            
+            const data = await this._httpGetWithHeaders(`${serverUrl}/confirm`, { 'session-id': sessionId });
             this._view?.webview.postMessage({ command: 'updateChanges', data: JSON.parse(data) });
         } catch (error) {
             this._view?.webview.postMessage({ command: 'error', message: String(error) });
         }
     }
 
-    private _httpGet(url: string): Promise<string> {
+    private async _handleChange(changeId: string, accepted: boolean) {
+        try {
+            const config = vscode.workspace.getConfiguration('trelloboredextension');
+            const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+            const apiUrl = `${serverUrl}/api/changes/${changeId}/${accepted ? 'accept' : 'decline'}`;
+            await this._httpPost(apiUrl);
+            vscode.window.showInformationMessage(`Change ${accepted ? 'accepted' : 'declined'}`);
+            await this._fetchAndDisplayChanges();
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to ${accepted ? 'accept' : 'decline'} change: ${error}`);
+        }
+    }
+
+    private _httpGetWithHeaders(url: string, headers: Record<string, string>): Promise<string> {
         return new Promise((resolve, reject) => {
+            const urlObj = new URL(url);
             const client = url.startsWith('https') ? https : http;
-            client.get(url, (res) => {
+            const options = {
+                hostname: urlObj.hostname,
+                port: urlObj.port,
+                path: urlObj.pathname + urlObj.search,
+                method: 'GET',
+                headers
+            };
+            
+            client.get(options, (res) => {
                 let data = '';
                 res.on('data', chunk => data += chunk);
                 res.on('end', () => resolve(data));
             }).on('error', reject);
+        });
+    }
+
+    private _httpPostWithHeaders(url: string, headers: Record<string, string>): Promise<{headers: Record<string, string>}> {
+        return new Promise((resolve, reject) => {
+            const urlObj = new URL(url);
+            const client = url.startsWith('https') ? https : http;
+            const req = client.request({
+                hostname: urlObj.hostname,
+                port: urlObj.port,
+                path: urlObj.pathname,
+                method: 'POST',
+                headers
+            }, (res) => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => resolve({ headers: res.headers as Record<string, string> }));
+            });
+            req.on('error', reject);
+            req.end();
+        });
+    }
+
+    private _httpPost(url: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const urlObj = new URL(url);
+            const client = url.startsWith('https') ? https : http;
+            const req = client.request({
+                hostname: urlObj.hostname,
+                port: urlObj.port,
+                path: urlObj.pathname,
+                method: 'POST'
+            }, (res) => {
+                res.on('end', () => resolve());
+            });
+            req.on('error', reject);
+            req.end();
         });
     }
 

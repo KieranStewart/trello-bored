@@ -5,12 +5,9 @@ from bored_api import pr
 from dotenv import load_dotenv
 import os
 from proxy_mgmt.proxy import BoardProxy
+from tools import get_tools, get_ticket, get_all_tickets, get_all_labels, get_all_prs
 
 load_dotenv()
-
-def get_tools():
-    proxy = BoardProxy()
-    return proxy.get_all_tools()
 
 async def query_agent(tools: list[function], system_prompt: str, user_input: str):
     agent = FunctionAgent(
@@ -25,23 +22,68 @@ async def query_agent(tools: list[function], system_prompt: str, user_input: str
         response = None
     return response
 
-async def review_pr_and_return_set_of_tickets(pr_url: str) -> str | None:
+async def review_ticket_and_get_labels(ticket_id: int) -> str | None:
+    tickets = get_all_tickets()
+    # print(tickets)
+    ticket_ids = [ticket.number for ticket in tickets]
+    if ticket_id not in ticket_ids:
+        raise ValueError(f"Ticket ID {ticket_id} not found in board")
+    ticket: Ticket = tickets[ticket_ids.index(ticket_id)]
     system_prompt = f"""
-    You are a helpful assistant that reviews a GitHub PR and returns a list of possible issue IDs that might be related.
+    You are a helpful assistant that reviews a GitHub issue and generates a list of relevant labels based on the content of the issue.
     Please provide your response in the following format:
-    <issue_id_1>, <issue_id_2>, ...
-    Say "None" if there are no linked open issues.
+    <label_1>, <label_2>, ...
+    Say "N/A" if there are no relevant labels. Please only return existing labels that are relevant to the issue, do not make up new labels.
     You have access to the following tools:
     """
     for tool in get_tools():
         system_prompt += f"- {tool.__name__}\n"
-    system_prompt += f"You can also use the following board proxy methods to get information about tickets:\n"
-
     
-    user_input = f"Review the PR at {pr_url} and return a list of issues"
+    user_input = f"Review issue {ticket.item_id} and generate a list of relevant labels"
+    response = await query_agent(get_tools(), system_prompt, user_input)
+    return response
+
+async def review_pr_and_get_labels(pr_number: int) -> str | None:
+    prs = get_all_prs()
+    pr_numbers = [pr.number for pr in prs]
+    if pr_number not in pr_numbers:
+        raise ValueError(f"PR number {pr_number} not found in board")
+    pr = prs[pr_numbers.index(pr_number)]
+    system_prompt = f"""
+    You are a helpful assistant that reviews a GitHub pull request and generates a list of relevant labels based on the content of the pull request.
+    Please provide your response in the following format:
+    <label_1>, <label_2>, ...
+    Say "N/A" if there are no relevant labels. Please only return existing labels that are relevant to the pull request, do not make up new labels.
+    You have access to the following tools:
+    """
+    for tool in get_tools():
+        system_prompt += f"- {tool.__name__}\n"
+    
+    user_input = f"Review pull request {pr.number} and generate a list of relevant labels"
+    response = await query_agent(get_tools(), system_prompt, user_input)
+    return response
+
+async def review_pr_and_get_assoc_tickets(pr_number: int) -> str | None:
+    prs = get_all_prs()
+    pr_numbers = [pr.number for pr in prs]
+    if pr_number not in pr_numbers:
+        raise ValueError(f"PR number {pr_number} not found in board")
+    pr = prs[pr_numbers.index(pr_number)]
+    system_prompt = f"""
+    You are a helpful assistant that reviews a GitHub pull request and generates a list of most closely related tickets based on the content of the pull request.
+    Please provide your response in the following format:
+    <ticket_id_1>, <ticket_id_2>, ...
+    Say "N/A" if there are no relevant tickets. Please only return existing ticket IDs that are relevant to the pull request, do not make up new ticket IDs.
+    Your most powerful tool is get_all_tickets, use it to review all tickets and find the most relevant ones to the PR. You can also use get_ticket to get more information about specific tickets if needed.
+    You have access to the following tools:
+    """
+    for tool in get_tools():
+        system_prompt += f"- {tool.__name__}\n"
+    
+    user_input = f"Review pull request {pr.number} and generate a list of associated ticket IDs"
     response = await query_agent(get_tools(), system_prompt, user_input)
     return response
 
 if __name__ == "__main__":
-    response = asyncio.run(review_pr_and_return_set_of_tickets("https://github.com/your-repo/your-pr"))
+    response = asyncio.run(review_pr_and_get_assoc_tickets(49))
     print(response)

@@ -29,6 +29,14 @@ class StatusInfo:
     def names(self) -> list[str]:
         return list(self.options.keys())
 
+@dataclass
+class PullRequest:
+    id: str
+    number: str
+    title: str
+    body: str
+    state: str
+    labels: list[Label]
 
 class GithubProjects(BoardProxyInterface):
     def __init__(self, token, project_id):
@@ -54,7 +62,97 @@ class GithubProjects(BoardProxyInterface):
             if "name" in field and field["name"] in status_info.names():
                 return field["name"]
         return None
+    
+    def get_all_labels(self) -> list[Label]:
+        query = """
+        query($owner: String!, $name: String!) {
+            repository(owner: $owner, name: $name) {
+                labels(first: 100) {
+                    nodes {
+                        id
+                        name
+                        color
+                        description
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                    }
+                }
+            }
+        }
+        """
+        json = self.run_query(query, {"owner": "KieranStewart", "name": "trello-bored"})
+        labels_json = json["data"]["repository"]["labels"]["nodes"]
+        labels = []
+        for label in labels_json:
+            labels.append(Label(
+                id=label["id"],
+                name=label["name"],
+                color=label.get("color"),
+                description=label.get("description"),
+            ))
+        return labels
+    
+    def get_all_prs(self) -> list[PullRequest]:
+        query = """
+        query($owner: String!, $name: String!) {
+            repository(owner: $owner, name: $name) {
+                pullRequests(first: 100) {
+                    nodes {
+                        id
+                        number
+                        title
+                        body
+                        state
+                        labels(first: 5) {
+                            nodes {
+                                id
+                                name
+                                color
+                                description
+                            }
+                        }
+                    }
+                    pageInfo {
+                        endCursor
+                        hasNextPage
+                    }
+                }
+            }
+        }
+        """
+        json = self.run_query(query, {"owner": "KieranStewart", "name": "trello-bored"})
+        prs_json = json["data"]["repository"]["pullRequests"]["nodes"]
+        prs = []
+        for pr in prs_json:
+            labels: list[Label] = [
+                Label(
+                    id=label["id"],
+                    name=label["name"],
+                    color=label.get("color"),
+                    description=label.get("description"),
+                )
+                for label in pr["labels"]["nodes"]
+            ]
+            prs.append(PullRequest(
+                id=pr["id"],
+                number=pr["number"],
+                title=pr["title"],
+                body=pr["body"],
+                state=pr["state"],
+                labels=labels
+            ))
+        return prs
+    
+    def get_pr(self, pr_number) -> PullRequest:
+        prs = self.get_all_prs()
+        pr_numbers = [pr.number for pr in prs]
+        if pr_number not in pr_numbers:
+            raise ValueError(f"PR number {pr_number} not found in board")
+        return prs[pr_numbers.index(pr_number)]
 
+    
     def get_ticket(self, ticket_id: str) -> Ticket:
         query = """
         query($itemId: ID!) {
@@ -248,4 +346,3 @@ class GithubProjects(BoardProxyInterface):
         }
 
         self.run_query(mutation, variables)
-        
