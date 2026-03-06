@@ -12,10 +12,10 @@ from tools import get_tools, get_ticket, get_all_tickets, get_all_labels, get_al
 load_dotenv()
 
 @dataclass
-class TicketUpdate(BaseModel):
-    ticket_id: int = Field(..., description="The ID of the ticket to update")
-    new_status: str = Field(..., description="The new status for the ticket")
-    description: str = Field(None, description="An optional description providing more context about the update")
+class TicketUpdate():
+    ticket_id: int
+    new_status: str
+    description: str
 
 async def query_agent(tools: list[function], system_prompt: str, user_input: str, output_cls = None):
     agent = FunctionAgent(
@@ -100,9 +100,9 @@ async def review_merge_and_get_ticket_status_update(branch_name: str, pr_diff: s
     You should determine the ticket id from the branch name and available tools, and then review the diff to understand what changes were made in the PR. 
     Based on the changes, you should generate a new status for the ticket (statuses are defined below)
     Please provide your response in the following format:
-    <ticket_id (int)>: <ticket_status (str)>; <description (str, optional)>
+    <ticket_id (int)>;<ticket_status (str)>;<description (str, optional)>
     For example:
-    123: In Progress; The PR added a new feature, so the ticket status should be updated to In Progress.
+    123;In Progress;The PR added a new feature, so the ticket status should be updated to In Progress.
     You will need to use the tools: get_all_tickets and get_ticket to find the relevant ticket and understand its current status and description. 
     Then you will review the PR diff and determine how the changes in the PR should impact the ticket status.
     You may also need to use get_all_prs to find the PR associated with the branch name and get_pr to get more information about the PR if needed.
@@ -118,8 +118,15 @@ async def review_merge_and_get_ticket_status_update(branch_name: str, pr_diff: s
     system_prompt += f"The possible ticket statuses are: {', '.join(statuses)}\n"
     
     user_input = f"Review the diff of a merged pull request with branch name {branch_name} and generate a status update for the associated ticket"
-    response = await query_agent(get_tools(), system_prompt, user_input, output_cls=TicketUpdate)
-    return response
+    response = await query_agent(get_tools(), system_prompt, user_input)
+    response_split = str(response).split(";")
+    if len(response_split) < 2:
+        print(f"Invalid response format: {response}")
+        return None
+    ticket_id = int(response_split[0])
+    new_status = response_split[1]
+    description = response_split[2] if len(response_split) > 2 else None
+    return TicketUpdate(ticket_id=ticket_id, new_status=new_status, description=description)
 
 if __name__ == "__main__":
     diff = """
@@ -246,4 +253,3 @@ if __name__ == "__main__":
     """
     response = asyncio.run(review_merge_and_get_ticket_status_update("dev-parse-pr-api", diff))
     print(response)
-    print(response.parsed_output)
