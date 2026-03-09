@@ -1,0 +1,14 @@
+body { padding: 10px; font-family: var(--vscode-font-family); }
+.settings { margin-bottom: 16px; padding: 12px; background: var(--vscode-editor-background); border-radius: 4px; }
+input { width: 100%; padding: 6px; margin: 4px 0 8px 0; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); }
+label { display: block; margin-top: 8px; font-size: 12px; }
+button { padding: 8px 16px; margin: 4px 4px 16px 0; cursor: pointer; }
+.nav-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
+.nav-btn { flex: 1; padding: 10px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; }
+.nav-btn.active { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+.change-item { padding: 8px; margin: 8px 0; border-left: 3px solid var(--vscode-button-background); background: var(--vscode-editor-background); }
+.change-actions { margin-top: 8px; }
+.accept-btn { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; }
+.decline-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; }
+.error { color: var(--vscode-errorForeground); }
+.loading { color: var(--vscode-descriptionForeground); }

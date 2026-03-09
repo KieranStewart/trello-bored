@@ -4,22 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trello Bored</title>
-    <style>
-        body { padding: 10px; font-family: var(--vscode-font-family); }
-        .settings { margin-bottom: 16px; padding: 12px; background: var(--vscode-editor-background); border-radius: 4px; }
-        input { width: 100%; padding: 6px; margin: 4px 0 8px 0; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); }
-        label { display: block; margin-top: 8px; font-size: 12px; }
-        button { padding: 8px 16px; margin: 4px 4px 16px 0; cursor: pointer; }
-        .nav-buttons { display: flex; gap: 8px; margin-bottom: 16px; }
-        .nav-btn { flex: 1; padding: 10px; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; }
-        .nav-btn.active { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
-        .change-item { padding: 8px; margin: 8px 0; border-left: 3px solid var(--vscode-button-background); background: var(--vscode-editor-background); }
-        .change-actions { margin-top: 8px; }
-        .accept-btn { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; }
-        .decline-btn { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; }
-        .error { color: var(--vscode-errorForeground); }
-        .loading { color: var(--vscode-descriptionForeground); }
-    </style>
+    <link rel="stylesheet" href="./style/sidebar.css">
 </head>
 <body>
     <h2>Trello Board Changes</h2>
@@ -39,73 +24,6 @@
         <button class="nav-btn" onclick="showView('historical')">Historical Changes</button>
     </div>
     <div id="content"></div>
-    <script>
-        const vscode = acquireVsCodeApi();
-        let currentView = 'approve';
-        let currentData = null;
-        
-        vscode.postMessage({ command: 'loadSettings' });
-        
-        function saveSettings() {
-            const serverUrl = document.getElementById('serverUrl').value;
-            const username = document.getElementById('username').value;
-            const sessionId = document.getElementById('sessionId').value;
-            vscode.postMessage({ command: 'saveSettings', serverUrl, username, sessionId });
-        }
-
-        function createSession() {
-            vscode.postMessage({ command: 'createSession' });
-        }
-        
-        function showView(view) {
-            currentView = view;
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            if (view === 'approve' || view === 'historical') {
-                fetchChanges();
-            } else {
-                vscode.postMessage({ command: 'loadView', view });
-            }
-        }
-        
-        function fetchChanges() {
-            document.getElementById('content').innerHTML = '<p class="loading">Loading...</p>';
-            vscode.postMessage({ command: 'fetchChanges' });
-        }
-
-        function acceptChange(changeId) {
-            vscode.postMessage({ command: 'acceptChange', changeId });
-        }
-
-        function declineChange(changeId) {
-            vscode.postMessage({ command: 'declineChange', changeId });
-        }
-        
-        window.addEventListener('message', event => {
-            const message = event.data;
-            
-            switch (message.command) {
-                case 'settingsLoaded':
-                    document.getElementById('serverUrl').value = message.serverUrl;
-                    document.getElementById('username').value = message.username;
-                    document.getElementById('sessionId').value = message.sessionId;
-                    break;
-                case 'renderView':
-                    document.getElementById('content').innerHTML = message.html;
-                    break;
-                case 'updateChanges':
-                    currentData = message.data;
-                    vscode.postMessage({ command: 'loadView', view: currentView, data: currentData });
-                    break;
-                case 'error':
-                    document.getElementById('content').innerHTML = '<p class="error">Error: ' + message.message + '</p>';
-                    break;
-            }
-        });
-        
-        showView('approve');
-        vscode.postMessage({ command: 'startPolling', interval: 5000 });
-    </script>
+    <script src="./script/sidebar.js"></script>
 </body>
 </html>

@@ -93,6 +93,33 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     private _loadViewContent(view: string, data?: any) {
         const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'views', `${view}.html`);
         let html = fs.readFileSync(htmlPath, 'utf8');
+
+        const approveCssUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'approve.css')
+        ).toString() ?? '';
+        const historicalCssUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'historical.css')
+        ).toString() ?? '';
+        const todoCssUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'todo.css')
+        ).toString() ?? '';
+        const approveJsUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'approve.js')
+        ).toString() ?? '';
+        const historicalJsUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'historical.js')
+        ).toString() ?? '';
+        const todoJsUri = this._view?.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'todo.js')
+        ).toString() ?? '';
+
+        html = html
+            .replace(/\.\.\/style\/approve\.css/g, approveCssUri)
+            .replace(/\.\.\/style\/historical\.css/g, historicalCssUri)
+            .replace(/\.\.\/style\/todo\.css/g, todoCssUri)
+            .replace(/\.\.\/script\/approve\.js/g, approveJsUri)
+            .replace(/\.\.\/script\/historical\.js/g, historicalJsUri)
+            .replace(/\.\.\/script\/todo\.js/g, todoJsUri);
         
         if (view === 'approve' && data) {
             html = html.replace('{{CONTENT}}', this._renderApproveItems(data));
@@ -227,7 +254,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlContent() {
-        const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'sidebar.html');
-        return fs.readFileSync(htmlPath, 'utf8');
+    const htmlPath = path.join(this._extensionUri.fsPath, 'src', 'sidebar.html');
+
+    const sidebarCssUri = this._view?.webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, 'src', 'style', 'sidebar.css')
+        ).toString() ?? '';
+
+    const sidebarJsUri = this._view?.webview.asWebviewUri(
+        vscode.Uri.joinPath(this._extensionUri, 'src', 'script', 'sidebar.js')
+        ).toString() ?? '';
+
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    return html
+        .replace('./style/sidebar.css', sidebarCssUri)
+        .replace('./script/sidebar.js', sidebarJsUri);
     }
 }
