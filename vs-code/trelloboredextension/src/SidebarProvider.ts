@@ -49,6 +49,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 case 'createSession':
                     await this._createSession();
                     break;
+                case 'confirmChange':
+                    await this._confirmChange(message.taskId, message.confirm);
+                    break;
             }
         });
 
@@ -196,6 +199,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private async _confirmChange(taskId: string, confirm: boolean) {
+        try {
+            const config = vscode.workspace.getConfiguration('trelloboredextension');
+            const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+            const sessionId = config.get<string>('sessionId', '');
+            
+            await this._httpPostJson(`${serverUrl}/confirm`, { task_id: taskId, confirm }, { 'session-id': sessionId });
+            vscode.window.showInformationMessage(`Change ${confirm ? 'approved' : 'rejected'}`);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to ${confirm ? 'approve' : 'reject'} change: ${error}`);
+        }
+    }
+
     private _httpGetWithHeaders(url: string, headers: Record<string, string>): Promise<string> {
         return new Promise((resolve, reject) => {
             const urlObj = new URL(url);
@@ -232,6 +248,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 res.on('end', () => resolve({ headers: res.headers as Record<string, string> }));
             });
             req.on('error', reject);
+            req.end();
+        });
+    }
+
+    private _httpPostJson(url: string, body: any, headers: Record<string, string> = {}): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const urlObj = new URL(url);
+            const client = url.startsWith('https') ? https : http;
+            const data = JSON.stringify(body);
+            const req = client.request({
+                hostname: urlObj.hostname,
+                port: urlObj.port,
+                path: urlObj.pathname,
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json', 'Content-Length': data.length }
+            }, (res) => {
+                res.on('end', () => resolve());
+            });
+            req.on('error', reject);
+            req.write(data);
             req.end();
         });
     }

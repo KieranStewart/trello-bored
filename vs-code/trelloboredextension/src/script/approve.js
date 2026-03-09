@@ -90,12 +90,14 @@ const vscode = acquireVsCodeApi();
       async function approveChange() {
         if (selectedIndex === null) {return;}
         const change = changes[selectedIndex];
-        // TODO send change to API here
+        vscode.postMessage({ command: "confirmChange", taskId: change.task_id || change.id, confirm: true });
         removeSelectedCard();
       }
 
       function rejectChange() {
         if (selectedIndex === null) {return;}
+        const change = changes[selectedIndex];
+        vscode.postMessage({ command: "confirmChange", taskId: change.task_id || change.id, confirm: false });
         removeSelectedCard();
       }
 
