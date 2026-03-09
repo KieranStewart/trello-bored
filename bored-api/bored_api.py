@@ -43,8 +43,11 @@ def confirm():
         print("getting")
         return client_view(request.headers.get("session-id"))
     else:
+        data = request.get_json()
+        confirm = data.get('confirm')
+        task_id = data.get('task_id')
         # TODO write sent changes to board
-        return Response("Not created", 400)
+        return Response('Confirmation Status Recieved', 200)
 
 @app.route('/init', methods=['POST'])
 def init():
