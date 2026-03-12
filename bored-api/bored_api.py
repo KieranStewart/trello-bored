@@ -1,12 +1,15 @@
 import os
-from flask import Flask, Response, request
+from weakref import proxy
+from flask import Flask, Response, request, jsonify
 from update import secure_update
 from client import client_view, query_client, generate_session
 from dotenv import load_dotenv
 from proxy_mgmt.implementations.github_projects import GithubProjects
+from proxy_mgmt.proxy import BoardProxy
+
 
 app = Flask(__name__)
-
+board = BoardProxy()
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
@@ -58,6 +61,22 @@ def init():
 def update():
     return secure_update(request.headers.get("admin-key"))
 
-
+@app.route('/tasks', methods=['GET'])
+def tasks():
+    try:
+        tickets = board.get_all_tickets()
+        open_tickets = [t for t in tickets if str(t.state).upper() == "OPEN"]
+        return jsonify({
+            "tasks": [
+                {
+                    "number": t.number,
+                    "title": t.title,
+                    "state": t.state,
+                }
+                for t in open_tickets
+            ]
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Error fetching tickets: {str(e)}"}), 500
 if __name__ == "__main__":
     app.run(port=8080)

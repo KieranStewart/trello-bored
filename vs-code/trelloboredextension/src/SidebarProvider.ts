@@ -52,11 +52,34 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 case 'confirmChange':
                     await this._confirmChange(message.taskId, message.confirm);
                     break;
+                case 'fetchTodoTasks':
+                    await this._fetchTodoTasks();
+                    break;
+
             }
         });
 
         webviewView.onDidDispose(() => this._stopPolling());
     }
+
+    private async _fetchTodoTasks() {
+    try {
+        const config = vscode.workspace.getConfiguration('trelloboredextension');
+        const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+        const data = await this._httpGetWithHeaders(`${serverUrl}/tasks`, {});
+        const parsed = JSON.parse(data);
+
+        this._view?.webview.postMessage({
+            command: 'updateTodoTasks',
+            data: parsed
+        });
+    } catch (error) {
+        this._view?.webview.postMessage({
+            command: 'error',
+            message: String(error)
+        });
+    }
+}
 
     private async _saveSettings(serverUrl: string, username: string, sessionId: string) {
         const config = vscode.workspace.getConfiguration('trelloboredextension');
@@ -130,13 +153,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             html = html.replace('{{CONTENT}}', this._renderHistoricalItems(data));
         } else if (view === 'approve' || view === 'historical') {
             html = html.replace('{{CONTENT}}', '<p>No data available</p>');
+        } else if (view === 'todo' && data) {
+            html = html.replace('{{CONTENT}}', this._renderTodoItems(data));
+        } else if (view === 'todo') {
+            html = html.replace('{{CONTENT}}', '<p>No to-do items.</p>');
         }
         
         this._view?.webview.postMessage({ command: 'renderView', html });
     }
 
     private _renderApproveItems(data: any[]): string {
-        if (!data || data.length === 0) return '<p>No pending requests</p>';
+        if (!data || data.length === 0) {
+            return '<p>No pending requests</p>';
+        }
         
         return data.map(change => 
             `<div class="change-item">
@@ -151,7 +180,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _renderHistoricalItems(data: any[]): string {
-        if (!data || data.length === 0) return '<p>No historical data</p>';
+        if (!data || data.length === 0) {
+            return '<p>No historical data</p>';
+        }
         
         return data.map(change => 
             `<div class="change-item">
@@ -160,6 +191,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             </div>`
         ).join('');
     }
+
+    private _renderTodoItems(data: any[]): string {
+        if (!data || data.length === 0) {
+            return '<p>No tasks available</p>';
+        }
+        return data.map(task =>
+            `<div class="change-item">
+            <strong>Task #${task.number ?? "?"}</strong>: ${task.title || "Untitled"}
+            <br><small>${task.state || ""}</small>
+            </div>`).join('');
+    }   
 
     private _startPolling(interval: number = 5000) {
         this._stopPolling();
