@@ -1,7 +1,7 @@
 import os
 from flask import Flask, Response, request
 from update import secure_update
-from client import client_view, query_client, generate_session
+from client import client_view, query_client, generate_session, sessions # FIXME Remove sessions debugging
 from dotenv import load_dotenv
 from proxy_mgmt.implementations.github_projects import GithubProjects
 
@@ -10,10 +10,9 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'GET':
-        return Response('Hello World!', 200)
+        return Response('<h1>Welcome to Bored API</h1>\nThis is the debug screen, if you are seeing this in production then don\'t.<br><br>\n' + str(sessions), 200)
     elif request.method == 'POST':
-        print("Posted:", request.form.keys())
-        return Response('Pushed?!', 200)
+        return Response('Post recieved at default endpoint, no action taken', 200)
 
 @app.route('/review', methods=['POST'])
 def review(): # TODO Write this endpoint (review)
@@ -21,13 +20,34 @@ def review(): # TODO Write this endpoint (review)
 
 @app.route('/merge', methods=['POST'])
 def merge(): # TODO Write this endpoint (merge)
+    # Parse message
+    """
+    Action -> Server
+{username: "github username",
+ diff: "difference between main and pr"
+ branch-name: "name of branch"
+ action-type: "merge"}
+ """
+    raw_body = request.get_data()
+    if not request.is_json():
+        return Response("NOT JSON?!?!", 400)
+    json_data = request.get_json()
+    if not all(_ in json_data.keys() for _ in ["username", "diff", "branch-name", "action-type"]):
+        return Response("Things are missing", 400)
     # Query AI for changes
+    
     # Write changes to client
     return Response('Default Response', 200)
 
 @app.route('/pr', methods=['POST'])
-def pr(): # TODO Write this endpoint (pr)
-    return Response('Default Response', 200)
+def pr(): # TODO Write this endpoint (pr)raw_body = request.get_data()
+    if not request.is_json():
+        return Response("NOT JSON?!?!", 400)
+    json_data = request.get_json()
+    if not all(_ in json_data.keys() for _ in ["username", "diff", "branch-name", "action-type"]):
+        return Response("Things are missing", 400)
+    
+    
 
 @app.route('/branch', methods=['POST'])
 def branch(): # TODO Write this endpoint (branch)
@@ -40,8 +60,7 @@ def checkout(): # TODO Write this endpoint (checkout)
 @app.route('/confirm', methods=['POST', 'GET'])
 def confirm():
     if request.method == 'GET':
-        print("getting")
-        return client_view(request.headers.get("session-id"))
+        return client_view(session_id=request.headers.get("session-id"), user_id=request.headers.get("user-id"))
     else:
         data = request.get_json()
         confirm = data.get('confirm')
@@ -54,10 +73,10 @@ def init():
     session_id = request.headers.get('session-id', '')
     return generate_session(session_id)
 
-@app.route('/admin/serverupdate')
-def update():
-    return secure_update(request.headers.get("admin-key"))
+# @app.route('/admin/serverupdate')
+# def update():
+#     return secure_update(request.headers.get("admin-key"))
 
 
 if __name__ == "__main__":
-    app.run(port=8080)
+    app.run(port=8080, host="0.0.0.0")
