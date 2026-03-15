@@ -20,8 +20,11 @@ const vscode = acquireVsCodeApi();
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
-            if (view === 'approve' || view === 'historical') {
+            if (view === 'approve') {
                 fetchChanges();
+            } else if (view === 'historical') {
+                vscode.postMessage({ command: 'loadView', view });
+                vscode.postMessage({ command: 'fetchHistoricalTasks' });
             } else if (view === 'todo') {
                 vscode.postMessage({ command: 'loadView', view });
                 vscode.postMessage({ command: 'fetchTodoTasks' });
@@ -60,6 +63,10 @@ const vscode = acquireVsCodeApi();
                     vscode.postMessage({ command: 'loadView', view: currentView, data: currentData });
                     break;
                 case 'updateTodoTasks':
+                    currentData = Array.isArray(message.data) ? message.data : (message.data?.tasks || []);
+                    vscode.postMessage({ command: 'loadView', view: currentView, data: currentData });
+                    break;
+                case 'updateHistoricalTasks':
                     currentData = Array.isArray(message.data) ? message.data : (message.data?.tasks || []);
                     vscode.postMessage({ command: 'loadView', view: currentView, data: currentData });
                     break;

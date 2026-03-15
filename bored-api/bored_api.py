@@ -78,5 +78,24 @@ def tasks():
         }), 200
     except Exception as e:
         return jsonify({"error": f"Error fetching tickets: {str(e)}"}), 500
+    
+@app.route('/history', methods = ['GET'])
+def history():
+    try:
+        tickets = board.get_all_tickets()
+        closed_tickets = [t for t in tickets if str(t.state).upper() == "CLOSED"]
+        return jsonify({
+            "tasks": [
+                {
+                    "number": t.number,
+                    "title": t.title,
+                    "state": t.state,
+                }
+                for t in closed_tickets
+            ]
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Error fetching tickets: {str(e)}"}), 500
+    
 if __name__ == "__main__":
     app.run(port=8080)

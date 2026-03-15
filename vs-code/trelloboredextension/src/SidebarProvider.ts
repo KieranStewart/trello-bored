@@ -55,6 +55,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 case 'fetchTodoTasks':
                     await this._fetchTodoTasks();
                     break;
+                case 'fetchHistoricalTasks':
+                    await this._fetchHistoricalTasks();
+                    break;
 
             }
         });
@@ -71,6 +74,25 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
         this._view?.webview.postMessage({
             command: 'updateTodoTasks',
+            data: parsed
+        });
+    } catch (error) {
+        this._view?.webview.postMessage({
+            command: 'error',
+            message: String(error)
+        });
+    }
+}
+
+    private async _fetchHistoricalTasks() {
+    try {
+        const config = vscode.workspace.getConfiguration('trelloboredextension');
+        const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+        const data = await this._httpGetWithHeaders(`${serverUrl}/history`, {});
+        const parsed = JSON.parse(data);
+
+        this._view?.webview.postMessage({
+            command: 'updateHistoricalTasks',
             data: parsed
         });
     } catch (error) {
@@ -181,15 +203,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
     private _renderHistoricalItems(data: any[]): string {
         if (!data || data.length === 0) {
-            return '<p>No historical data</p>';
+            return '<p>No tasks available</p>';
         }
-        
-        return data.map(change => 
+        return data.map(task =>
             `<div class="change-item">
-                <strong>${change.type || 'Update'}</strong>: ${change.description || ''}
-                <br><small>${change.timestamp || ''}</small>
-            </div>`
-        ).join('');
+            <strong>Task #${task.number ?? "?"}</strong>: ${task.title || "Untitled"}
+            <br><small>${task.state || ""}</small>
+            </div>`).join('');
     }
 
     private _renderTodoItems(data: any[]): string {
