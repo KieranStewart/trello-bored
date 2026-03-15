@@ -23,10 +23,10 @@ const vscode = acquireVsCodeApi();
             if (view === 'approve') {
                 fetchChanges();
             } else if (view === 'historical') {
-                vscode.postMessage({ command: 'loadView', view });
+                document.getElementById('content').innerHTML = '<p class="loading">Loading...</p>';
                 vscode.postMessage({ command: 'fetchHistoricalTasks' });
             } else if (view === 'todo') {
-                vscode.postMessage({ command: 'loadView', view });
+                document.getElementById('content').innerHTML = '<p class="loading">Loading...</p>';
                 vscode.postMessage({ command: 'fetchTodoTasks' });
             } else {
                 vscode.postMessage({ command: 'loadView', view });

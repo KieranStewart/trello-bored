@@ -61,6 +61,7 @@ def init():
 def update():
     return secure_update(request.headers.get("admin-key"))
 
+# TODO add endpoint for fetching current tasks (open tickets)
 @app.route('/tasks', methods=['GET'])
 def tasks():
     try:
@@ -79,6 +80,7 @@ def tasks():
     except Exception as e:
         return jsonify({"error": f"Error fetching tickets: {str(e)}"}), 500
     
+# TODO add endpoint for fetching historical tasks (closed tickets)
 @app.route('/history', methods = ['GET'])
 def history():
     try:
