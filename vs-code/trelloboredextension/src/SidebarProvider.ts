@@ -26,7 +26,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     await this._fetchAndDisplayChanges();
                     break;
                 case 'saveSettings':
-                    await this._saveSettings(message.serverUrl, message.username, message.sessionId);
+                    await this._saveSettings(message.serverUrl, message.username, message.sessionId, message.userId);
                     break;
                 case 'loadSettings':
                     this._loadSettings();
@@ -103,11 +103,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 }
 
-    private async _saveSettings(serverUrl: string, username: string, sessionId: string) {
+    private async _saveSettings(serverUrl: string, username: string, sessionId: string, userId: string) {
         const config = vscode.workspace.getConfiguration('trelloboredextension');
         await config.update('serverUrl', serverUrl, vscode.ConfigurationTarget.Global);
         await config.update('username', username, vscode.ConfigurationTarget.Global);
         await config.update('sessionId', sessionId, vscode.ConfigurationTarget.Global);
+        await config.update('userId', userId, vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage('Settings saved!');
     }
 
@@ -116,7 +117,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
         const username = config.get<string>('username', '');
         const sessionId = config.get<string>('sessionId', '');
-        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId });
+        const userId = config.get<string>('userId', '');
+        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId, userId });
     }
 
     private async _createSession() {
@@ -124,15 +126,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const config = vscode.workspace.getConfiguration('trelloboredextension');
             const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
             const sessionId = config.get<string>('sessionId', '');
-            
-            const response = await this._httpPostWithHeaders(`${serverUrl}/init`, { 'session-id': sessionId });
-            const newSessionId = response.headers['session-id'];
-            
-            if (newSessionId) {
-                await config.update('sessionId', newSessionId, vscode.ConfigurationTarget.Global);
-                this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username: config.get<string>('username', ''), sessionId: newSessionId });
-                vscode.window.showInformationMessage(`Session created: ${newSessionId}`);
-            }
+            const username = config.get<string>('username', '');
+
+            const sessionResponse = await this._httpPostWithHeaders(`${serverUrl}/init`, { 'session-id': sessionId });
+            const newSessionId = sessionResponse.headers['session-id'] ?? sessionId;
+            await config.update('sessionId', newSessionId, vscode.ConfigurationTarget.Global);
+
+            const userResponse = await this._httpPostWithHeaders(`${serverUrl}/init/user`, { 'session-id': newSessionId, 'user-id': username });
+            const newUserId = userResponse.headers['user-id'] ?? username;
+            await config.update('userId', newUserId, vscode.ConfigurationTarget.Global);
+
+            this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId: newSessionId, userId: newUserId });
+            vscode.window.showInformationMessage(`Session: ${newSessionId}, User: ${newUserId}`);
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create session: ${error}`);
         }
@@ -240,9 +245,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const config = vscode.workspace.getConfiguration('trelloboredextension');
             const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
             const sessionId = config.get<string>('sessionId', '');
-            
-            const data = await this._httpGetWithHeaders(`${serverUrl}/confirm`, { 'session-id': sessionId });
-            this._view?.webview.postMessage({ command: 'updateChanges', data: JSON.parse(data) });
+            const userId = config.get<string>('userId', '');
+
+            const data = await this._httpGetWithHeaders(`${serverUrl}/confirm`, { 'session-id': sessionId, 'user-id': userId });
+            try {
+                this._view?.webview.postMessage({ command: 'updateChanges', data: JSON.parse(data) });
+            } catch {
+                this._view?.webview.postMessage({ command: 'error', message: data });
+            }
         } catch (error) {
             this._view?.webview.postMessage({ command: 'error', message: String(error) });
         }
@@ -266,8 +276,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const config = vscode.workspace.getConfiguration('trelloboredextension');
             const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
             const sessionId = config.get<string>('sessionId', '');
-            
-            await this._httpPostJson(`${serverUrl}/confirm`, { task_id: taskId, confirm }, { 'session-id': sessionId });
+            const userId = config.get<string>('userId', '');
+
+            await this._httpPostJson(`${serverUrl}/confirm`, { task_id: taskId, confirm }, { 'session-id': sessionId, 'user-id': userId });
             vscode.window.showInformationMessage(`Change ${confirm ? 'approved' : 'rejected'}`);
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to ${confirm ? 'approve' : 'reject'} change: ${error}`);
