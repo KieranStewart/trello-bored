@@ -2,7 +2,6 @@ import asyncio
 from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.agent.workflow import FunctionAgent
 from pydantic import BaseModel, Field
-from bored_api import pr
 from dotenv import load_dotenv
 import os
 from dataclasses import dataclass
@@ -17,7 +16,7 @@ class TicketUpdate():
     new_status: str
     description: str
 
-async def query_agent(tools: list[function], system_prompt: str, user_input: str, output_cls = None):
+async def query_agent(tools: list, system_prompt: str, user_input: str, output_cls = None):
     agent = FunctionAgent(
         llm=GoogleGenAI(api_key=os.getenv("GEMINI_API_KEY"), model="gemini-2.5-pro"),
         tools=tools,

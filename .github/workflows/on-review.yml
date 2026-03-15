@@ -1,4 +1,4 @@
-﻿name: Call server api on when a review is generated
+name: Call server api when a review is submitted
 
 on:
   pull_request_review:
@@ -9,24 +9,25 @@ jobs:
   on_review:
     runs-on: ubuntu-latest
     steps:
-      # get the head of the current branch
       - name: Checkout pull request HEAD
-        id: checkout_pr_head
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      # print out the code difference between main and the current branch
-      - name: print-diff
+
+      - name: Generate diff
         shell: bash
         run: |
           git fetch origin main
           git diff origin/main..HEAD > mydiff
-          echo "mydiff = "
-          cat mydiffi
-      # Uncomment api calls when endpoint is ready
-      # - name: Make update request
-      #   run: |
-      #     curl --request POST \
-      #       --url 'https://22gwilliams.pythonanywhere.com/review' \
-      #       --data '{"branch": "${{ github.ref_name }}", "diff": "$(cat mydiff)"}'
+          echo "mydiff ="
+          cat mydiff
+
+      - name: POST to /review
+        run: |
+          DIFF=$(cat mydiff)
+          curl --request POST \
+            --url '${{ secrets.SERVER_URL }}/review' \
+            --header 'Content-Type: application/json' \
+            --header 'session-id: ${{ secrets.SESSION_ID }}' \
+            --data "{\"username\": \"${{ github.event.review.user.login }}\", \"pr-number\": \"${{ github.event.pull_request.number }}\", \"diff\": $(echo "$DIFF" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}"

@@ -26,7 +26,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                     await this._fetchAndDisplayChanges();
                     break;
                 case 'saveSettings':
-                    await this._saveSettings(message.serverUrl, message.username, message.sessionId);
+                    await this._saveSettings(message.serverUrl, message.username, message.sessionId, message.userId);
                     break;
                 case 'loadSettings':
                     this._loadSettings();
@@ -49,17 +49,66 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 case 'createSession':
                     await this._createSession();
                     break;
+                case 'confirmChange':
+                    await this._confirmChange(message.taskId, message.confirm);
+                    break;
+                case 'fetchTodoTasks':
+                    await this._fetchTodoTasks();
+                    break;
+                case 'fetchHistoricalTasks':
+                    await this._fetchHistoricalTasks();
+                    break;
+
             }
         });
 
         webviewView.onDidDispose(() => this._stopPolling());
     }
 
-    private async _saveSettings(serverUrl: string, username: string, sessionId: string) {
+    private async _fetchTodoTasks() {
+    try {
+        const config = vscode.workspace.getConfiguration('trelloboredextension');
+        const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+        const data = await this._httpGetWithHeaders(`${serverUrl}/tasks`, {});
+        const parsed = JSON.parse(data);
+
+        this._view?.webview.postMessage({
+            command: 'updateTodoTasks',
+            data: parsed
+        });
+    } catch (error) {
+        this._view?.webview.postMessage({
+            command: 'error',
+            message: String(error)
+        });
+    }
+}
+
+    private async _fetchHistoricalTasks() {
+    try {
+        const config = vscode.workspace.getConfiguration('trelloboredextension');
+        const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+        const data = await this._httpGetWithHeaders(`${serverUrl}/history`, {});
+        const parsed = JSON.parse(data);
+
+        this._view?.webview.postMessage({
+            command: 'updateHistoricalTasks',
+            data: parsed
+        });
+    } catch (error) {
+        this._view?.webview.postMessage({
+            command: 'error',
+            message: String(error)
+        });
+    }
+}
+
+    private async _saveSettings(serverUrl: string, username: string, sessionId: string, userId: string) {
         const config = vscode.workspace.getConfiguration('trelloboredextension');
         await config.update('serverUrl', serverUrl, vscode.ConfigurationTarget.Global);
         await config.update('username', username, vscode.ConfigurationTarget.Global);
         await config.update('sessionId', sessionId, vscode.ConfigurationTarget.Global);
+        await config.update('userId', userId, vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage('Settings saved!');
     }
 
@@ -68,7 +117,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
         const username = config.get<string>('username', '');
         const sessionId = config.get<string>('sessionId', '');
-        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId });
+        const userId = config.get<string>('userId', '');
+        this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId, userId });
     }
 
     private async _createSession() {
@@ -76,15 +126,18 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const config = vscode.workspace.getConfiguration('trelloboredextension');
             const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
             const sessionId = config.get<string>('sessionId', '');
-            
-            const response = await this._httpPostWithHeaders(`${serverUrl}/init`, { 'session-id': sessionId });
-            const newSessionId = response.headers['session-id'];
-            
-            if (newSessionId) {
-                await config.update('sessionId', newSessionId, vscode.ConfigurationTarget.Global);
-                this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username: config.get<string>('username', ''), sessionId: newSessionId });
-                vscode.window.showInformationMessage(`Session created: ${newSessionId}`);
-            }
+            const username = config.get<string>('username', '');
+
+            const sessionResponse = await this._httpPostWithHeaders(`${serverUrl}/init`, { 'session-id': sessionId });
+            const newSessionId = sessionResponse.headers['session-id'] ?? sessionId;
+            await config.update('sessionId', newSessionId, vscode.ConfigurationTarget.Global);
+
+            const userResponse = await this._httpPostWithHeaders(`${serverUrl}/init/user`, { 'session-id': newSessionId, 'user-id': username });
+            const newUserId = userResponse.headers['user-id'] ?? username;
+            await config.update('userId', newUserId, vscode.ConfigurationTarget.Global);
+
+            this._view?.webview.postMessage({ command: 'settingsLoaded', serverUrl, username, sessionId: newSessionId, userId: newUserId });
+            vscode.window.showInformationMessage(`Session: ${newSessionId}, User: ${newUserId}`);
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create session: ${error}`);
         }
@@ -127,13 +180,19 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             html = html.replace('{{CONTENT}}', this._renderHistoricalItems(data));
         } else if (view === 'approve' || view === 'historical') {
             html = html.replace('{{CONTENT}}', '<p>No data available</p>');
+        } else if (view === 'todo' && data) {
+            html = html.replace('{{CONTENT}}', this._renderTodoItems(data));
+        } else if (view === 'todo') {
+            html = html.replace('{{CONTENT}}', '<p>No to-do items.</p>');
         }
         
         this._view?.webview.postMessage({ command: 'renderView', html });
     }
 
     private _renderApproveItems(data: any[]): string {
-        if (!data || data.length === 0) return '<p>No pending requests</p>';
+        if (!data || data.length === 0) {
+            return '<p>No pending requests</p>';
+        }
         
         return data.map(change => 
             `<div class="change-item">
@@ -148,15 +207,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _renderHistoricalItems(data: any[]): string {
-        if (!data || data.length === 0) return '<p>No historical data</p>';
-        
-        return data.map(change => 
+        if (!data || data.length === 0) {
+            return '<p>No tasks available</p>';
+        }
+        return data.map(task =>
             `<div class="change-item">
-                <strong>${change.type || 'Update'}</strong>: ${change.description || ''}
-                <br><small>${change.timestamp || ''}</small>
-            </div>`
-        ).join('');
+            <strong>Task #${task.number ?? "?"}</strong>: ${task.title || "Untitled"}
+            <br><small>${task.state || ""}</small>
+            </div>`).join('');
     }
+
+    private _renderTodoItems(data: any[]): string {
+        if (!data || data.length === 0) {
+            return '<p>No tasks available</p>';
+        }
+        return data.map(task =>
+            `<div class="change-item">
+            <strong>Task #${task.number ?? "?"}</strong>: ${task.title || "Untitled"}
+            <br><small>${task.state || ""}</small>
+            </div>`).join('');
+    }   
 
     private _startPolling(interval: number = 5000) {
         this._stopPolling();
@@ -175,9 +245,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             const config = vscode.workspace.getConfiguration('trelloboredextension');
             const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
             const sessionId = config.get<string>('sessionId', '');
-            
-            const data = await this._httpGetWithHeaders(`${serverUrl}/confirm`, { 'session-id': sessionId });
-            this._view?.webview.postMessage({ command: 'updateChanges', data: JSON.parse(data) });
+            const userId = config.get<string>('userId', '');
+
+            const data = await this._httpGetWithHeaders(`${serverUrl}/confirm`, { 'session-id': sessionId, 'user-id': userId });
+            try {
+                this._view?.webview.postMessage({ command: 'updateChanges', data: JSON.parse(data) });
+            } catch {
+                this._view?.webview.postMessage({ command: 'error', message: data });
+            }
         } catch (error) {
             this._view?.webview.postMessage({ command: 'error', message: String(error) });
         }
@@ -193,6 +268,20 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             await this._fetchAndDisplayChanges();
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to ${accepted ? 'accept' : 'decline'} change: ${error}`);
+        }
+    }
+
+    private async _confirmChange(taskId: string, confirm: boolean) {
+        try {
+            const config = vscode.workspace.getConfiguration('trelloboredextension');
+            const serverUrl = config.get<string>('serverUrl', 'http://localhost:8080');
+            const sessionId = config.get<string>('sessionId', '');
+            const userId = config.get<string>('userId', '');
+
+            await this._httpPostJson(`${serverUrl}/confirm`, { task_id: taskId, confirm }, { 'session-id': sessionId, 'user-id': userId });
+            vscode.window.showInformationMessage(`Change ${confirm ? 'approved' : 'rejected'}`);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to ${confirm ? 'approve' : 'reject'} change: ${error}`);
         }
     }
 
@@ -232,6 +321,26 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
                 res.on('end', () => resolve({ headers: res.headers as Record<string, string> }));
             });
             req.on('error', reject);
+            req.end();
+        });
+    }
+
+    private _httpPostJson(url: string, body: any, headers: Record<string, string> = {}): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const urlObj = new URL(url);
+            const client = url.startsWith('https') ? https : http;
+            const data = JSON.stringify(body);
+            const req = client.request({
+                hostname: urlObj.hostname,
+                port: urlObj.port,
+                path: urlObj.pathname,
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json', 'Content-Length': data.length }
+            }, (res) => {
+                res.on('end', () => resolve());
+            });
+            req.on('error', reject);
+            req.write(data);
             req.end();
         });
     }

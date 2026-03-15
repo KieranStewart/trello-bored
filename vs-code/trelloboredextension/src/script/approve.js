@@ -55,7 +55,7 @@ const vscode = acquireVsCodeApi();
         changes.forEach((change, index) => {
           const div = document.createElement("div");
           div.className = "ticket";
-          div.textContent = change.name;
+          div.textContent = change.type + ': ' + change.description;
           div.onclick = () => selectChange(index, div);
           list.appendChild(div);
         });
@@ -90,12 +90,14 @@ const vscode = acquireVsCodeApi();
       async function approveChange() {
         if (selectedIndex === null) {return;}
         const change = changes[selectedIndex];
-        // TODO send change to API here
+        vscode.postMessage({ command: "confirmChange", taskId: change.task_id || change.id, confirm: true });
         removeSelectedCard();
       }
 
       function rejectChange() {
         if (selectedIndex === null) {return;}
+        const change = changes[selectedIndex];
+        vscode.postMessage({ command: "confirmChange", taskId: change.task_id || change.id, confirm: false });
         removeSelectedCard();
       }
 

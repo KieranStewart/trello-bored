@@ -1,32 +1,24 @@
 name: Call server api when PR is opened
 
 on:
-  pull_request_review:
+  pull_request:
     types:
-      - submitted
+      - opened
 
 jobs:
   run-on-create:
     runs-on: ubuntu-latest
     steps:
-      # get the head of the current branch
       - name: Checkout pull request HEAD
-        id: checkout_pr_head
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
-      # print out the code difference between main and the current branch
-      - name: print-diff
-        shell: bash
+
+      - name: POST to /pr
         run: |
-          git fetch origin main
-          git diff origin/main..HEAD > mydiff
-          echo "mydiff = "
-          cat mydiff
-      # Uncomment api calls when endpoint is ready
-      # - name: Make update request
-      #   run: |
-      #     curl --request POST \
-      #       --url 'https://22gwilliams.pythonanywhere.com/pr'
-      #       --data '{"branch": "${{ github.ref_name }}", "diff": "$(cat mydiff)"}'
+          curl --request POST \
+            --url '${{ secrets.SERVER_URL }}/pr' \
+            --header 'Content-Type: application/json' \
+            --header 'session-id: ${{ secrets.SESSION_ID }}' \
+            --data "{\"username\": \"${{ github.event.pull_request.user.login }}\", \"pr-number\": \"${{ github.event.pull_request.number }}\"}"
