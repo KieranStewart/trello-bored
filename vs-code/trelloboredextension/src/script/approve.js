@@ -55,7 +55,7 @@ const vscode = acquireVsCodeApi();
         changes.forEach((change, index) => {
           const div = document.createElement("div");
           div.className = "ticket";
-          div.textContent = change.name;
+          div.textContent = change.type + ': ' + change.description;
           div.onclick = () => selectChange(index, div);
           list.appendChild(div);
         });

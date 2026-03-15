@@ -29,6 +29,11 @@
           "type": "string",
           "default": "",
           "description": "Session ID for API authentication"
+        },
+        "trelloboredextension.userId": {
+          "type": "string",
+          "default": "",
+          "description": "User ID within the session"
         }
       }
     },
