@@ -1,6 +1,7 @@
 from uuid import uuid4
 from flask import Response, jsonify
 from proxy_mgmt.proxy import BoardProxy
+import tools
 
 PROJ_BOARD = BoardProxy()
 
@@ -26,6 +27,8 @@ sessions = {
                 "type": "Card Moved",
                 "description": "Card 'Fix bug #123' moved from 'In Progress' to 'Done'",
                 "timestamp": "2024-01-15 11:45 AM",
+                "ticket-id":"12",
+                "target-catagory-id":"13",
                 "task_id":"2"
             }
         ]
@@ -42,8 +45,8 @@ def confirm_slide(session_id:str, user_id:str, task_id, confirm):
 
 def take_action(action:dict[str, str]):
     # TODO Set standard names for each of the actions
-    if action["type"] == "Card Moved":
-        PROJ_BOARD.move_ticket()
+    if action["type"] == "Card Moved" and action["confirm"]:
+        tools.move_ticket(action["ticket-id"], action["target-catagory-id"]) # FIXME we need target and ticket ids as well as confirmation boolean (currently set up to be passed within the json)
 
 # FIXME change usage to match query
 def query_client(session_id:str, user_id:str, tasks):
@@ -95,3 +98,7 @@ def generate_user(session_id:str, user_id:str=''):
     out.headers.add('user-id', str(user_id))
     out.headers.add('session-id', str(session_id))
     return out
+
+# FIXME This should get a user id given the github identity (idek how we are mapping this)
+def get_user_id_from_github_identity(github_identifier:str):
+    return 0
