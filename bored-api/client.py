@@ -12,24 +12,7 @@ Sessions represent projects (github projects + github repo) and the users are in
 # FIXME remove sample sessions
 # TODO Add project vs user seperation
 sessions = {
-    "0":{
-        "user0":[
-            {
-                "type":"Card Created",
-                "description":"New card 'implement login feature' added to the to-do list",
-                "timestamp":"2024-01-15 10:30 AM",
-                "task_id":"1",
-                "new_status": None
-            },
-            {
-                "type": "Card Moved",
-                "description": "Card 'Fix bug #123' moved from 'In Progress' to 'Done'",
-                "timestamp": "2024-01-15 11:45 AM",
-                "task_id":"2",
-                "new_status": "Done"
-            }
-        ]
-    }
+    "0":{}
 }
 
 def confirm_slide(session_id: str, user_id: str, task_id, confirm):
