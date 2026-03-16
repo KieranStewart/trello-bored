@@ -40,14 +40,18 @@ def confirm_slide(session_id: str, user_id: str, task_id, confirm):
     for action in sessions[session_id][user_id]:
         if action["task_id"] == task_id:
             if confirm:
-                take_action(action)
-            sessions[session_id][user_id].remove(action)
-            return Response("Task confirmed", 200)
+                if take_action(action):
+                    sessions[session_id][user_id].remove(action)
+                    return Response("Task confirmed", 200)
+                return Response("Failed to confirm task", 400)
+            return Response("Task rejected", 200)
     return Response("Task not found", 404)
 
 def take_action(action: dict):
     if action["type"] == "Card Moved" and action.get("new_status"):
         PROJ_BOARD.move_ticket(action["task_id"], action["new_status"])
+        return True
+    return False
 
 def query_client(session_id: str, user_id: str, tasks):
     if session_id not in sessions:
