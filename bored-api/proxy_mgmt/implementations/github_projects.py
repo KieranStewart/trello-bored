@@ -47,6 +47,7 @@ class GithubProjects(BoardProxyInterface):
         self.project_id = project_id
 
     def run_query(self, query, variables=None):
+        print(f"Running query with variables: {variables}")
         response = requests.post(
             self.url,
             json={"query": query, "variables": variables},
@@ -56,6 +57,7 @@ class GithubProjects(BoardProxyInterface):
         return response.json()
     
     def get_status(self, item):
+        print(f"Getting status for item {item['id']}")
         status_info = self.get_categories()
 
         for field in item["fieldValues"]["nodes"]:
@@ -64,6 +66,7 @@ class GithubProjects(BoardProxyInterface):
         return None
     
     def get_all_labels(self) -> list[Label]:
+        print("Getting all labels")
         query = """
         query($owner: String!, $name: String!) {
             repository(owner: $owner, name: $name) {
@@ -95,6 +98,7 @@ class GithubProjects(BoardProxyInterface):
         return labels
     
     def get_all_prs(self) -> list[PullRequest]:
+        print("Getting all pull requests")
         query = """
         query($owner: String!, $name: String!) {
             repository(owner: $owner, name: $name) {
@@ -146,6 +150,7 @@ class GithubProjects(BoardProxyInterface):
         return prs
     
     def get_pr(self, pr_number) -> PullRequest:
+        print(f"Getting pull request {pr_number}")
         prs = self.get_all_prs()
         pr_numbers = [pr.number for pr in prs]
         if pr_number not in pr_numbers:
@@ -154,6 +159,7 @@ class GithubProjects(BoardProxyInterface):
 
     
     def get_ticket(self, ticket_id: str) -> Ticket:
+        print(f"Getting ticket {ticket_id}")
         query = """
         query($itemId: ID!) {
             node(id: $itemId) {
@@ -211,6 +217,7 @@ class GithubProjects(BoardProxyInterface):
         )
     
     def get_tickets(self, category) -> list[Ticket]:
+        print(f"Getting tickets in category {category}")
         return [
             ticket
             for ticket in self.get_all_tickets()
@@ -218,6 +225,7 @@ class GithubProjects(BoardProxyInterface):
         ]
 
     def get_all_tickets(self) -> list[Ticket]:
+        print("Getting all tickets")
         query = """
         query($projectId: ID!) {
             node(id: $projectId) {
@@ -285,6 +293,7 @@ class GithubProjects(BoardProxyInterface):
         return tickets
 
     def get_categories(self) -> StatusInfo:
+        print("Getting all categories")
         query = """
         query($projectId: ID!) {
             node(id: $projectId) {
@@ -311,9 +320,21 @@ class GithubProjects(BoardProxyInterface):
             options={opt["name"]: opt["id"] for opt in field["options"]}
         )
 
-    def move_ticket(self, ticket_id, category):
-        if self.get_ticket(ticket_id).status == category:
+    def move_ticket(self, ticket_num, category):
+        print(f"Moving ticket {ticket_num} to category {category}")
+        tickets = self.get_all_tickets()
+        ticket_id = None
+        for ticket in tickets:
+            if ticket.number == ticket_num:
+                ticket_id = ticket.item_id
+                break
+        if ticket_id is None:
+            raise ValueError(f"Ticket number {ticket_num} not found in board")
+        if self.get_ticket(ticket_id).state == category:
+            print(f"Ticket {ticket_num} is already in category {category}")
             return
+        
+        print(f"Found ticket id {ticket_id} for ticket number {ticket_num}")
 
         status_info = self.get_categories()
         option_id = status_info.get_option_id(category)
