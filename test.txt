@@ -1,1 +1,1 @@
-Bored API creates todo list from blocks
+Replace polling in the extension with a websocket connection to the server
