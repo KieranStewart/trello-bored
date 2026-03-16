@@ -5,7 +5,7 @@ from update import secure_update
 from client import client_view, query_client, generate_session, generate_user, confirm_slide, sessions # FIXME Remove sessions debugging
 from dotenv import load_dotenv
 from proxy_mgmt.proxy import BoardProxy
-from ai import review_merge_and_get_ticket_status_update, review_pr_and_get_assoc_tickets, TicketUpdate
+from ai import review_merge_and_get_ticket_status_update, review_pr_and_get_assoc_tickets
 
 app = Flask(__name__)
 board = BoardProxy()
@@ -54,16 +54,15 @@ def pr():
     session_id = request.headers.get("session-id")
     user_id = json_data["username"]
     pr_number = int(json_data["pr-number"])
-    ticket_update: TicketUpdate = asyncio.run(review_pr_and_get_assoc_tickets(pr_number))
-    description = ticket_update.description
-    if description is None or str(description).strip() == "N/A":
-        return Response("No description found", 200)
+    associated_tickets = asyncio.run(review_pr_and_get_assoc_tickets(pr_number))
+    if associated_tickets is None or str(associated_tickets).strip() == "N/A":
+        return Response("No associated tickets found", 200)
 
     task = {
         "type": "PR Review",
-        "description": f"PR #{pr_number} has the following update: {description}",
-        "task_id": str(ticket_update.ticket_id),
-        "new_status": ticket_update.new_status
+        "description": f"PR #{pr_number} is associated with tickets: {associated_tickets}",
+        "task_id": str(pr_number),
+        "new_status": "In review"
     }
     return query_client(session_id, user_id, [task])
 
