@@ -57,4 +57,4 @@ class BoardProxy:
 
 if __name__ == "__main__":
     proxy = BoardProxy()
-    print(proxy.move_ticket(13, "In review"))
+    print(proxy.move_ticket(2, "Ready"))

@@ -62,7 +62,7 @@ def pr():
         "type": "PR Review",
         "description": f"PR #{pr_number} is associated with tickets: {associated_tickets}",
         "task_id": str(pr_number),
-        "new_status": "In review"
+        "new_status": None
     }
     return query_client(session_id, user_id, [task])
 
