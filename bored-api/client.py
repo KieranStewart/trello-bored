@@ -34,17 +34,23 @@ sessions = {
 
 def confirm_slide(session_id: str, user_id: str, task_id, confirm):
     if session_id not in sessions:
+        print("Session ID not found")
         return Response("Session ID not found", 404)
     if user_id not in sessions[session_id]:
+        print("User ID not found")
         return Response("User ID not found", 404)
     for action in sessions[session_id][user_id]:
         if action["task_id"] == task_id:
             if confirm:
                 if take_action(action):
                     sessions[session_id][user_id].remove(action)
+                    print("Task confirmed and action taken")
                     return Response("Task confirmed", 200)
+                print("Failed to take action for task")
                 return Response("Failed to confirm task", 400)
+            print("Task rejected by user")
             return Response("Task rejected", 200)
+    print("Task ID not found")
     return Response("Task not found", 404)
 
 def take_action(action: dict):
