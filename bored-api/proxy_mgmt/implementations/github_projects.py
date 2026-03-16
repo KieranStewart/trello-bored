@@ -325,7 +325,8 @@ class GithubProjects(BoardProxyInterface):
         tickets = self.get_all_tickets()
         ticket_id = None
         for ticket in tickets:
-            if ticket.number == ticket_num:
+            print(f"Checking ticket {ticket.number} with id {ticket.item_id}")
+            if str(ticket.number) == str(ticket_num):
                 ticket_id = ticket.item_id
                 break
         if ticket_id is None:
