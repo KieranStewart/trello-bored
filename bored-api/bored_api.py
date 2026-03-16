@@ -58,13 +58,20 @@ def pr():
     if associated_tickets is None or str(associated_tickets).strip() == "N/A":
         return Response("No associated tickets found", 200)
 
-    task = {
-        "type": "PR Review",
-        "description": f"PR #{pr_number} is associated with tickets: {associated_tickets}",
-        "task_id": str(pr_number),
-        "new_status": "In review"
-    }
-    return query_client(session_id, user_id, [task])
+    ticket_nums = [t.strip() for t in str(associated_tickets).split(",") if t.strip().isdigit()]
+    if not ticket_nums:
+        return Response("No associated tickets found", 200)
+
+    tasks = [
+        {
+            "type": "PR Review",
+            "description": f"PR #{pr_number} is associated with ticket #{t}",
+            "task_id": t,
+            "new_status": "In review"
+        }
+        for t in ticket_nums
+    ]
+    return query_client(session_id, user_id, tasks)
 
 @app.route('/test/push', methods=['POST'])
 def test_push():

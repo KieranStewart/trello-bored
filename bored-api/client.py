@@ -36,13 +36,12 @@ def confirm_slide(session_id: str, user_id: str, task_id, confirm):
 
 def take_action(action: dict):
     print(f"[take_action] action={action}")
-    if action["type"] == "Card Moved" and action.get("new_status"):
+    if action.get("new_status"):
         print(f"[take_action] Moving ticket {action['task_id']} to '{action['new_status']}'")
-        PROJ_BOARD.move_ticket(action["task_id"], action["new_status"])
+        PROJ_BOARD.move_ticket(int(action["task_id"]), action["new_status"])
         print(f"[take_action] move_ticket completed")
     else:
         print(f"[take_action] No move for type='{action['type']}'")
-
 
 def query_client(session_id: str, user_id: str, tasks):
     if session_id not in sessions:
