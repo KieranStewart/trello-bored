@@ -16,26 +16,33 @@ sessions = {
 }
 
 def confirm_slide(session_id: str, user_id: str, task_id, confirm):
+    print(f"[confirm_slide] session_id={session_id} user_id={user_id} task_id={task_id} confirm={confirm}")
     if session_id not in sessions:
-        print("Session ID not found")
+        print(f"[confirm_slide] Session '{session_id}' not found. Known: {list(sessions.keys())}")
         return Response("Session ID not found", 404)
     if user_id not in sessions[session_id]:
-        print("User ID not found")
+        print(f"[confirm_slide] User '{user_id}' not found. Known: {list(sessions[session_id].keys())}")
         return Response("User ID not found", 404)
     for action in sessions[session_id][user_id]:
         if action["task_id"] == task_id:
+            print(f"[confirm_slide] Found task: {action}")
             if confirm:
                 take_action(action)
             sessions[session_id][user_id].remove(action)
+            print(f"[confirm_slide] Task removed. Remaining: {[a['task_id'] for a in sessions[session_id][user_id]]}")
             return Response("Task confirmed", 200)
+    print(f"[confirm_slide] Task '{task_id}' not found. Known: {[a['task_id'] for a in sessions[session_id][user_id]]}")
     return Response("Task not found", 404)
 
 def take_action(action: dict):
+    print(f"[take_action] action={action}")
     if action["type"] == "Card Moved" and action.get("new_status"):
+        print(f"[take_action] Moving ticket {action['task_id']} to '{action['new_status']}'")
         PROJ_BOARD.move_ticket(action["task_id"], action["new_status"])
-        return True
-    print(str(action))
-    return False
+        print(f"[take_action] move_ticket completed")
+    else:
+        print(f"[take_action] No move for type='{action['type']}'")
+
 
 def query_client(session_id: str, user_id: str, tasks):
     if session_id not in sessions:
