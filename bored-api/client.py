@@ -51,6 +51,7 @@ def take_action(action: dict):
     if action["type"] == "Card Moved" and action.get("new_status"):
         PROJ_BOARD.move_ticket(action["task_id"], action["new_status"])
         return True
+    print(str(action))
     return False
 
 def query_client(session_id: str, user_id: str, tasks):
