@@ -29,8 +29,7 @@ jobs:
       - name: POST to /merge
         run: |
           DIFF=$(cat mydiff)
-          curl --request POST \
-            --url '${{ secrets.SERVER_URL }}/merge' \
+          curl --request POST https://trello-bored-bg8l.onrender.com/merge \
             --header 'Content-Type: application/json' \
             --header 'session-id: ${{ secrets.SESSION_ID }}' \
             --data "{\"username\": \"${{ github.event.pull_request.user.login }}\", \"branch-name\": \"${{ github.head_ref }}\", \"diff\": $(echo "$DIFF" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}"

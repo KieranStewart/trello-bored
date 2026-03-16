@@ -26,8 +26,7 @@ jobs:
       - name: POST to /review
         run: |
           DIFF=$(cat mydiff)
-          curl --request POST \
-            --url '${{ secrets.SERVER_URL }}/review' \
+          curl --request POST https://trello-bored-bg8l.onrender.com/review \
             --header 'Content-Type: application/json' \
             --header 'session-id: ${{ secrets.SESSION_ID }}' \
             --data "{\"username\": \"${{ github.event.review.user.login }}\", \"pr-number\": \"${{ github.event.pull_request.number }}\", \"diff\": $(echo "$DIFF" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}"
