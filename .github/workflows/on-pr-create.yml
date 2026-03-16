@@ -17,8 +17,7 @@ jobs:
 
       - name: POST to /pr
         run: |
-          curl --request POST \
-            --url '${{ secrets.SERVER_URL }}/pr' \
+          curl --request POST https://trello-bored-bg8l.onrender.com/pr \
             --header 'Content-Type: application/json' \
             --header 'session-id: ${{ secrets.SESSION_ID }}' \
             --data "{\"username\": \"${{ github.event.pull_request.user.login }}\", \"pr-number\": \"${{ github.event.pull_request.number }}\"}"
