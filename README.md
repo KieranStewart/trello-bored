@@ -2,12 +2,13 @@
 
 ## Created by
 
-- [gabrielhwilliams](https://github.com/gabrielhwilliams)
-- [Aj-fior60](https://github.com/Aj-fior60)
-- [KieranStewart](https://github.com/KieranStewart)
-- [atauln](https://github.com/atauln)
-- [AJBruno23](https://github.com/AJBruno23)
-- [OwenCHowell](https://github.com/OwenCHowell)
+[![gabrielhwilliams](https://img.shields.io/badge/gabrielhwilliams-000?style=for-the-badge&logo=github)](https://github.com/gabrielhwilliams)
+[![Aj-fior60](https://img.shields.io/badge/Aj--fior60-000?style=for-the-badge&logo=github)](https://github.com/Aj-fior60)
+[![KieranStewart](https://img.shields.io/badge/KieranStewart-000?style=for-the-badge&logo=github)](https://github.com/KieranStewart)
+[![atauln](https://img.shields.io/badge/atauln-000?style=for-the-badge&logo=github)](https://github.com/atauln)
+[![AJBruno23](https://img.shields.io/badge/AJBruno23-000?style=for-the-badge&logo=github)](https://github.com/AJBruno23)
+[![OwenCHowell](https://img.shields.io/badge/OwenCHowell-000?style=for-the-badge&logo=github)](https://github.com/OwenCHowell)
+
 
 ## Project Mission
 
